@@ -41,7 +41,6 @@ app.on("ready", async () => {
         fs.mkdirSync(MAIN_DIRECTORY, { recursive: true });
         eventHandler.info("Working directory didn't exist, created it", EVENT_HANDLER_NAME);
     }
-    generatePopupWindow("info", "Getting things ready!", "Please wait", false);
     eventHandler.info("Kardinia Kiosk Version " + APPLICATION_VERSION, EVENT_HANDLER_NAME);
     eventHandler.info("Config location " + MAIN_DIRECTORY, EVENT_HANDLER_NAME);
 
@@ -57,6 +56,7 @@ app.on("ready", async () => {
 
     //Attempt to load the config and set things up
     if (loadConfig() == true) {
+        generatePopupWindow("info", "Getting things ready!", "Please wait", false);
         states.Config = true;
         await check();
 
@@ -246,6 +246,7 @@ function loadConfig() {
 
     //We have something that has a default value alert of this
     if (error) {
+        
         //Save the changes
         config.save(function (error) {
             if (error) { eventHandler.error("Failed to save the config file: " + error, EVENT_HANDLER_NAME); }
