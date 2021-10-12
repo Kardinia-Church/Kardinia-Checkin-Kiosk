@@ -1,0 +1,198 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="../fontawesome/css/all.css" />
+    <link href="../style.css" rel="stylesheet">
+</head>
+
+<body>
+    <center>
+        <div id="loader" class="loader">
+        </div>
+        <div id="main" class="hidden">
+            <h1 class="titleColor"><i class="fas fa-search" style="font-size: 3em;"></i></h1>
+            <h1 class="titleColor">There could be a few reasons that the printer is not working, don't stress just follow these steps!</h1>
+            <section class="smallGap"></section>
+            <div id="description" class="hidden">
+                <h1 id="descriptionText"></h1>
+                <h1>Did this fix the problem?</h1>
+                <button onclick="window.location.href = '../config.html'" class="dropbtn regularButton">Yes</button>
+                <button onclick="nextStep()" class="dropbtn regularButton">No</button>
+            </div>
+            <div id="steps">
+                <div>
+                    <h1>Does the printer have power and a connection to the computer?</h1>
+                    <p>Have a look at the printer, there should be a light, is it on? There should also be 2 cables
+                        connected to the printer (A USB cable and power cable)</p>
+                    <section class="smallGap"></section>
+                    <button onclick="nextStep()" class="dropbtn regularButton">Yes</button>
+                    <button
+                        onclick="showDescription('Try plugging in both cables, ensure there is power getting to the printer')"
+                        class="dropbtn regularButton">No</button>
+                </div>
+
+                <div>
+                    <h1>Are there any errors reported when you print?</h1>
+                    <p>When you printed a label did you see any errors?</p>
+                    <button onclick="gotoStep(6)" class="dropbtn regularButton">Yes</button>
+                    <button onclick="nextStep()" class="dropbtn regularButton">No</button>
+                </div>
+
+                <div>
+                    <h1>Does the printer have labels?</h1>
+                    <p>Have a look at the printer, you should see some labels available on the roll.</p>
+                    <button onclick="nextStep()" class="dropbtn regularButton">Yes</button>
+                    <button
+                        onclick="showDescription('The printer needs a new roll installed. If you are unsure of how to do this press back below and tap on <strong>the printer is out of labels</strong>')"
+                        class="dropbtn regularButton">No</button>
+                </div>
+
+                <div id="printerTypeError">
+                </div>
+
+                <div>
+                    <h1>Does this kiosk have the correct printer?</h1>
+                    <p>Have a look at the printer, the printer will have a name, this should be <strong
+                            id="checkinName"></strong> and the printer model should be a <strong
+                            id="printerType"></strong>
+                    </p>
+                    <button onclick="nextStep()" class="dropbtn regularButton">Yes</button>
+                    <button
+                        onclick="showDescription('Swap the printer with the correct one, if you need help doing this contact your campus technical director')"
+                        class="dropbtn regularButton">No</button>
+                    </p>
+                </div>
+
+                <div>
+                    <h1>Sorry this problem requires extra assistance.</h1>
+                    <p>Try restarting the kiosk, if the error is still present please contact your campus technical
+                        director
+                    </p>
+                    <p id="technical">(No extra information)</p>
+                </div>
+            </div>
+
+            <section class="largeGap"></section>
+            <button onclick="window.location.href = '../config.html'" class="dropbtn regularButton">Exit</button>
+        </div>
+    </center>
+
+</body>
+
+<script src="../script.js"></script>
+<script>
+    var step = -1;
+    window.onload = async function () {
+        for (var i = 0; i < document.getElementById("steps").getElementsByTagName("div").length; i++) {
+            document.getElementById("steps").getElementsByTagName("div")[i].classList.add("hidden");
+        }
+        nextStep();
+
+        var kioskInfo = await getKioskInformation();
+        var states = await getStates();
+        document.getElementById("checkinName").innerHTML = kioskInfo.kioskId;
+        document.getElementById("printerType").innerHTML = kioskInfo.printerType;
+
+        //Check if there are errors already detected
+        if (kioskInfo.printerId === undefined || kioskInfo.printerId == "unset") {
+            document.getElementById("technical").innerHTML = "Failed to set Fluro print station id";
+            gotoStep(5);
+        }
+        if (states.Printer == false) {
+            document.getElementById("technical").innerHTML = "Printer has failed check(s)</br></br>Relevant logs:";
+            var logs = await getLogs();
+
+            //Find some more detailed issues in the logs
+            for (var i = 0; i < logs.length; i++) {
+                if (logs[i].type == "error" && logs[i].domain == "Printer") {
+                    if (!document.getElementById("technical").innerHTML.includes(logs[i].info)) {
+                        document.getElementById("technical").innerHTML += "</br>" + logs[i].info;
+                    }
+                }
+            }
+
+            gotoStep(6);
+        }
+        else {
+            var h1 = document.createElement("h1");
+            var p = document.createElement("p");
+            var yes = document.createElement("button");
+            var no = document.createElement("button");
+            yes.classList.add("dropbtn");
+            yes.classList.add("regularButton");
+            no.classList.add("dropbtn");
+            no.classList.add("regularButton");
+
+            switch (kioskInfo.printerType) {
+                case "brotherQL580N":
+                case "brotherQL820NWB": {
+                    h1.innerHTML = "Does the printer have a problem?";
+                    p.innerHTML = "Have a look at the printer's status light";
+                    p.innerHTML += "</br><strong>The light is not lit:</strong> The printer is turned off, press the power button to turn it on or check it's power cable";
+                    p.innerHTML += "</br><strong>The light is orange:</strong> The roll cover is open, close the cover correctly";
+                    p.innerHTML += "</br><strong>The light is flashing orange:</strong> The printer is too hot, please wait for it to cool down";
+                    p.innerHTML += "</br><strong>The light is red:</strong> The printer is starting up, wait for it to be ready";
+                    p.innerHTML += "</br><strong>The light is flashing red:</strong> There is a problem, it could be an incorrect installation of the label roll, a jam, or other issue";
+                    yes.innerHTML = "Looks Ok";
+                    yes.onclick = function () { nextStep(); }
+                    no.innerHTML = "There is a problem";
+                    no.onclick = function () { showDescription("Try resolving the problem, if you need assistance ask your campus technical director"); }
+                    break;
+                }
+                case "DYMOLabelWriter450Turbo": {
+                    h1.innerHTML = "Does the printer have a problem?";
+                    p.innerHTML = "Have a look at the printer's status light";
+                    p.innerHTML += "</br><strong>The light is solid blue</strong> The printer has no issues and is ready to go";
+                    p.innerHTML += "</br><strong>The light is dimmed blue</strong> The printer is sleeping but is ready to go";
+                    p.innerHTML += "</br><strong>The light is flashing blue</strong> The printer is out of labels or the roll is not installed correctly";
+                    yes.innerHTML = "Looks Ok";
+                    yes.onclick = function () { nextStep(); }
+                    no.innerHTML = "There is a problem";
+                    no.onclick = function () { showDescription("Try resolving the problem, if you need assistance ask your campus technical director"); }
+                    break;
+                }
+                default: {
+                    h1.innerHTML = "Check the printer for error lights";
+                    p.innerHTML = "This printer is not supported but you can do basic checks if the light is flashing red it may indicate an issue.";
+                    yes.innerHTML = "Looks Ok";
+                    yes.onclick = function () { nextStep(); }
+                    no.innerHTML = "There is a problem";
+                    no.onclick = function () { showDescription("Try resolving the problem, if you need assistance ask your campus technical director"); }
+                    break;
+                }
+            }
+
+            document.getElementById("printerTypeError").appendChild(h1);
+            document.getElementById("printerTypeError").appendChild(p);
+            document.getElementById("printerTypeError").appendChild(yes);
+            document.getElementById("printerTypeError").appendChild(no);
+        }
+
+        hideShowElements("loader", "main");
+    };
+
+    //Move to the next step
+    function nextStep() {
+        document.getElementById("steps").getElementsByTagName("div")[step < 0 ? 0 : step].classList.add("hidden");
+        document.getElementById("steps").getElementsByTagName("div")[++step].classList.remove("hidden");
+        document.getElementById("description").classList.add("hidden");
+        document.getElementById("steps").classList.remove("hidden");
+    }
+
+    //Show a description
+    function showDescription(html) {
+        document.getElementById("descriptionText").innerHTML = html;
+        document.getElementById("description").classList.remove("hidden");
+        document.getElementById("steps").classList.add("hidden");
+    }
+
+    //Goto a specific step
+    function gotoStep(gotoStep) {
+        document.getElementById("steps").getElementsByTagName("div")[step < 0 ? 0 : step].classList.add("hidden");
+        step = gotoStep - 2;
+        nextStep();
+    }
+
+</script>
+
+</html>

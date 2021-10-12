@@ -1,0 +1,63 @@
+<html>
+<link href="../style.css" rel="stylesheet">
+
+<body>
+    <center>
+        <div id="loader" class="loader">
+        </div>
+        <div id="main" class="hidden">
+            <h1>Follow these steps to replace the roll of labels in the printer</h1>
+            <div style="height: 5vh"></div>
+
+            <div id="brotherQL580N" class="hidden">
+                <h1>Instructions for the Brother QL580N</h1>
+                <img src="./img/brotherQL580NLabelChange.png"></img>
+                <p>Go into printing preferences and set format to 'normal format', width to '62mm' and length to '100m'</p>
+            </div>
+            <div id="brotherQL820NWB" class="hidden">
+                <h1>Instructions for the Brother QL820NWB</h1>
+                <img src="./img/brotherQL820NWBLabelChange.png"></img>
+                <p>Go into printing preferences and set paper size to '62mm' and length to '100m'</p>
+            </div>
+            <div id="DYMOLabelWriter450Turbo" class="hidden">
+                <h1>Instructions for the DYMO LabelWriter 450Turbo</h1>
+                <img src="./img/DYMOLabelWriter450TurboLabelChange.png"></img>
+                <p>Go into printing preferences > advanced and set paper size to '99014 Name Badge Label'</p>
+            </div>
+            <div id="unsupported" class="hidden">
+                <h1>Sorry there are no instructions for this printer type.</h1>
+                <p id="printerType"></p>
+            </div>
+            <div style="height: 5vh"></div>
+            <button onclick="window.location.href = '../config.html'" class="dropbtn regularButton">Exit</button>
+        </div>
+    </center>
+</body>
+
+<script src="../script.js"></script>
+<script>
+    var step = -1;
+    window.onload = async function () {
+        var kioskInfo = await getKioskInformation();
+        hideShowElements("loader", "main");
+
+        //Show the printer type's instructions
+        if (kioskInfo.customPrinter.USBName != "unset") {
+            document.getElementById("unsupported").classList.remove("hidden");
+            document.getElementById("printerType").innerHTML = "Printer type: Custom";
+        }
+        else {
+            var elem = document.getElementById(kioskInfo.printerType);
+            if (elem === null) {
+                document.getElementById("unsupported").classList.remove("hidden");
+                document.getElementById("printerType").innerHTML = "Printer type: " + kioskInfo.printerType;
+            }
+            else {
+                elem.classList.remove("hidden");
+            }
+        }
+    };
+
+</script>
+
+</html>

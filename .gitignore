@@ -1,0 +1,7 @@
+kioskconfig*.json
+node_modules/
+dist/
+out/
+temp/
+config.conf
+config_backup.conf

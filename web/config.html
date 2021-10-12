@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../node_modules/@fortawesome/fontawesome-free/css/all.css" />
+  <link href="./style.css" rel="stylesheet">
+  <title>Configuration</title>
+</head>
+
+<body>
+  <center>
+    <div id="loader" class="loader">
+    </div>
+    <div id="main" class="hidden">
+      <h1><i class="fas fa-clipboard-check" style="font-size: 3em;"></i></h1>
+      <h1>Kiosk Configuration</h1>
+      <p id="kioskId" style="color: red;">Kiosk Unknown</p>
+      <h2>To access this configuration page again tap the top left then bottom right corners of the screen</h2>
+      </br>
+      <div class="dropdown">
+        <button onclick="openDropDown('modeSelection')" class="dropbtn">Select Kiosk Mode</button>
+        <div id="modeSelection" class="dropdown-content">
+        </div>
+      </div>
+      <div style="height: 12vw;"></div>
+      <div id="checks" style="margin-bottom: 10px"></div>
+      <div class="dropdown">
+        <button onclick="openTroubleshooting(true)" class="dropbtn regularButton">Troubleshoot</button>
+      </div>
+      <div class="dropdown">
+        <button onclick="openAdvanced(true)" class="dropbtn regularButton">Advanced</button>
+      </div>
+      <div class="dropdown">
+        <button onclick="closeConfigWindow()" class="dropbtn regularButton">Close Configuration</button>
+      </div>
+
+      </br>
+    </div>
+
+    <!-- Troubleshooting -->
+    <div id="troubleshooting" class="hidden">
+      <div id="troubleshootingMain">
+        <h1><i class="fas fa-search" style="font-size: 3em;"></i></h1>
+        <h1>What seems to be the problem?</h1>
+        <div style="height: 3vw;"></div>
+        <button onclick="openTroubleshootingPage('printerNotWorking')" class="dropbtn regularButton">The printer is not working</button>
+        <button onclick="openTroubleshootingPage('printerOutOfLabels')" class="dropbtn regularButton">The printer is out of labels</button>
+        <button onclick="reloadWindows(); openPopupWindow('info', 'Reloading Windows', 'The windows have been reset the issue should be resolved', 4000);" class="dropbtn regularButton">There is a white page or other issues displaying the kiosk</button>
+        <button onclick="openPopupWindow('warning', 'Restarting the Kiosk', 'The kiosk needs to be restarted this will happen in a few seconds', 4000); setTimeout(function(){restart();}, 5000);" class="dropbtn regularButton">There is a problem with how the screens are positioned</button>    
+        <button onclick="openTroubleshooting(false)" class="dropbtn regularButton">Back</button>
+      </div>
+    </div>
+
+    <!-- Advanced page -->
+    <div id="advanced" class="hidden">
+      <!-- Main menu -->
+      <div id="advancedMain">
+        <h1>Advanced Options</h1>
+        <div style="height: 3vw;"></div>
+        <button onclick="reloadWindows()" class="dropbtn regularButton">Reload Windows</button>
+        <button onclick="openPrinterSettings(true)" class="dropbtn regularButton">Change Printer Settings</button>
+        <!-- <button onclick="openConfiguration(true)" class="dropbtn regularButton">Change Configuration</button> -->
+        <button onclick="togglePrinter()" id="togglePrinterButton" class="dropbtn regularButton">Enable/Disable Printer</button>
+        <button onclick="issueTestPrint()" class="dropbtn regularButton">Test Print</button>
+        <button onclick="restart()" class="dropbtn regularButton">Restart Kiosk</button>
+        <button onclick="closeApplication()" class="dropbtn regularButton">Close Kiosk</button>
+        <button onclick="openAdvanced(false)" class="dropbtn regularButton">Back</button>
+
+        <div id="debugContainer" class="debugMinimized">
+          <button id="changeDebugSizeButton" onclick="resizeDebug()"><i class="fas fa-angle-double-up"></i></button>
+          <div id="debug"></div>
+        </div>
+      </div>
+
+      <!-- Printer settings-->
+      <div id="printerSettings" class="hidden">
+        <h1>Printer Options</h1>
+        <button onclick="openPrinterSettings(false)" class="dropbtn regularButton">Back</button>
+        <div style="height: 1vh;"></div>
+
+        <!-- Local printer settings -->
+        <label for="printerType" class="flowNice">Printer Type</label>
+        <select id="printerType" class="flowNice">
+          <option value="disable">Disabled</option>
+          <option value="custom">Custom</option>
+        </select>
+        <label id="printerUSBLabel" for="printerUSB" class="hidden flowNice">Printer</label>
+        <select id="printerUSB" class="hidden flowNice">
+          <option value="unset">None</option>
+        </select>
+        <label for="fluroPrinterId" class="flowNice">Fluro Printer ID</label>
+        <input id="fluroPrinterId" type="text" class="flowNice"></input>
+
+        <!-- Fluro printer settings -->
+        <div id="fluroSettings" class="hidden">
+          <label for="fluroPrinterNameTagTemplate" class="flowNice">Child Template</label>
+          <select id="fluroPrinterNameTagTemplate" class="flowNice">
+          </select>
+          <label for="fluroPrinterParentTemplate" class="flowNice">Parent Template</label>
+          <select id="fluroPrinterParentTemplate" class="flowNice">
+          </select>
+          <label for="fluroWidth" class="flowNice">Width (mm)</label>
+          <input id="fluroWidth" type="number" class="flowNice"></input>
+          <label for="fluroHeight" class="flowNice">Height (mm)</label>
+          <input id="fluroHeight" type="number" class="flowNice"></input>
+          <label for="fluroRotate">Rotate</label>
+          <input id="fluroRotate" type="checkbox"></input>
+          <label for="fluroStationName" class="flowNice">Station Name</label>
+          <input id="fluroStationName" type="text" class="flowNice"></input>
+        </div>
+        <p id="fluroSettingsError"><strong>There was a problem loading the Fluro printer settings. Is the printer id correct?</strong></p>
+
+        <button onclick="updatePrinterSettings()" class="dropbtn regularButton">Save</button>
+      </div>
+      <!-- Configuration settings -->
+      <div id="configurationSettings" class="hidden">
+        <h1>Kiosk Options</h1>
+        <button onclick="openConfiguration(false)" class="dropbtn regularButton">Back</button>
+        <div style="height: 10vh;"></div>
+      </div>
+    </div>
+  </center>
+</body>
+
+<script src="./script.js"></script>
+<script src="./config.js"></script>
+
+</html>

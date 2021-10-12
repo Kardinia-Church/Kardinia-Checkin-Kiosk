@@ -1,0 +1,4 @@
+appId: com.kardiniachurch.KardiniaCheckinApplication
+publish:
+  provider: github
+  token: <github token here>
