@@ -5,10 +5,7 @@ const ipcMain = electron.ipcMain;
 const { setup: setupPushReceiver } = require('electron-push-receiver');
 const { autoUpdater } = require('electron-updater');
 
-
-const { default: got } = require("got/dist/source");
 const nconf = require("nconf");
-const path = require("path");
 const os = require('os');
 const fs = require("fs");
 const MAIN_DIRECTORY = app.getPath("home") + "\\kardinia-kiosk";
@@ -44,8 +41,9 @@ app.on("ready", async () => {
     eventHandler.info("Kardinia Kiosk Version " + APPLICATION_VERSION, EVENT_HANDLER_NAME);
     eventHandler.info("Config location " + MAIN_DIRECTORY, EVENT_HANDLER_NAME);
 
-    autoUpdater.checkForUpdatesAndNotify();
+    var update = false;
     autoUpdater.on('update-available', () => {
+        update = true;
         eventHandler.info("Update available, downloading it!", EVENT_HANDLER_NAME);
         generatePopupWindow("info", "There is an update!", "Downloading and installing the update, please wait. This may take some time but the process is automatic", false);
     });
@@ -53,63 +51,66 @@ app.on("ready", async () => {
         eventHandler.info("Downloaded an update, restarting and installing!", EVENT_HANDLER_NAME);
         autoUpdater.quitAndInstall();
     });
+    autoUpdater.checkForUpdatesAndNotify().then(async function(result) {
+        if (update == false) {
+            //Attempt to load the config and set things up
+            if (loadConfig() == true) {
+                generatePopupWindow("info", "Getting things ready!", "Please wait", false);
+                states.Config = true;
+                await check();
 
-    //Attempt to load the config and set things up
-    if (loadConfig() == true) {
-        generatePopupWindow("info", "Getting things ready!", "Please wait", false);
-        states.Config = true;
-        await check();
+                //Add our callbacks for status updates for the popup window
+                printerHandler.setSuccessCallback(function (info, closeAfterMS) {
+                    generatePopupWindow("printSuccess", "Print Successful", info, closeAfterMS);
+                });
+                printerHandler.setFailureCallback(function (info, closeAfterMS) {
+                    generatePopupWindow("error", "Printer Error", info, closeAfterMS);
+                });
+                printerHandler.setPrintingCallback(function (info, closeAfterMS) {
+                    generatePopupWindow("printing", "Printing", info, closeAfterMS);
+                });
 
-        //Add our callbacks for status updates for the popup window
-        printerHandler.setSuccessCallback(function (info, closeAfterMS) {
-            generatePopupWindow("printSuccess", "Print Successful", info, closeAfterMS);
-        });
-        printerHandler.setFailureCallback(function (info, closeAfterMS) {
-            generatePopupWindow("error", "Printer Error", info, closeAfterMS);
-        });
-        printerHandler.setPrintingCallback(function (info, closeAfterMS) {
-            generatePopupWindow("printing", "Printing", info, closeAfterMS);
-        });
+                //Setup a hidden window that just handles the print events
+                var pushReceiver = new BrowserWindow({
+                    x: 0,
+                    y: 0,
+                    backgroundThrottling: false,
+                    webPreferences: {
+                        backgroundThrottling: false,
+                        skipTaskbar: true,
+                        nodeIntegration: true,
+                        webSecurity: false,
+                        contextIsolation: false,
+                        nodeIntegration: true
+                    },
+                    skipTaskbar: true
+                });
+                pushReceiver.loadFile("./web/pushReceiver.html");
+                setupPushReceiver(pushReceiver);
+                pushReceiver.hide();
+                //Send the id
+                setTimeout(function () {
+                    pushReceiver.webContents.send("startFirebaseService", configs["fluroFirebaseID"]);
+                }, 2000);
 
-        //Setup a hidden window that just handles the print events
-        var pushReceiver = new BrowserWindow({
-            x: 0,
-            y: 0,
-            backgroundThrottling: false,
-            webPreferences: {
-                backgroundThrottling: false,
-                skipTaskbar: true,
-                nodeIntegration: true,
-                webSecurity: false,
-                contextIsolation: false,
-                nodeIntegration: true
-            },
-            skipTaskbar: true
-        });
-        pushReceiver.loadFile("./web/pushReceiver.html");
-        setupPushReceiver(pushReceiver);
-        pushReceiver.hide();
-        //Send the id
-        setTimeout(function() {
-            pushReceiver.webContents.send("startFirebaseService", configs["fluroFirebaseID"]);
-        }, 2000);
+                generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
+                generateMainWindow();
+                generatePosterWindow();
+                generateSettingsWindow();
 
-        generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
-        generateMainWindow();
-        generatePosterWindow();
-        generateSettingsWindow();
+                //Every minute double check everything is good
+                setInterval(function () {
+                    check();
+                }, 60000);
+            }
+            else {
+                eventHandler.error("Failed to start application as there are configuration errors. Please update the configuration!", EVENT_HANDLER_NAME);
+                generatePopupWindow("error", "This kiosk has invalid configuration", "Please contact your technical director for assistance. The check-in cannot continue as it's missing critical configuration settings", false);
+            }
 
-        //Every minute double check everything is good
-        setInterval(function () {
-            check();
-        }, 60000);
-    }
-    else {
-        eventHandler.error("Failed to start application as there are configuration errors. Please update the configuration!", EVENT_HANDLER_NAME);
-        generatePopupWindow("error", "This kiosk has invalid configuration", "Please contact your technical director for assistance. The check-in cannot continue as it's missing critical configuration settings", false);
-    }
-
-    electron.powerSaveBlocker.start('prevent-app-suspension');
+            electron.powerSaveBlocker.start('prevent-app-suspension');
+        }
+    })
 });
 
 //Check if everything is functioning correctly. Returns true if there are no critical errors
@@ -246,7 +247,7 @@ function loadConfig() {
 
     //We have something that has a default value alert of this
     if (error) {
-        
+
         //Save the changes
         config.save(function (error) {
             if (error) { eventHandler.error("Failed to save the config file: " + error, EVENT_HANDLER_NAME); }
@@ -783,7 +784,7 @@ ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
 });
 
 //Little funny
-ipcMain.handle("easterEgg", function() {
+ipcMain.handle("easterEgg", function () {
     //Copy html file to temp
     var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_LOL.html", { flags: "w" });
     out.write("<html style='font-size: 0.4vw'>\
