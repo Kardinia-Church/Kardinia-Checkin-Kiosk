@@ -327,3 +327,7 @@ function openTroubleshooting(show) {
 function openTroubleshootingPage(page) {
     window.location.href = "./troubleshooting/" + page + ".html";
 }
+
+function easterEgg() {
+    ipcRenderer.invoke("easterEgg");
+}

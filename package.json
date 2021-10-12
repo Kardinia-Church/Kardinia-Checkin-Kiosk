@@ -1,6 +1,6 @@
 {
   "name": "kardinia-kiosk-checkin",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Kardinia Checkin Kiosk",
   "main": "app.js",
   "scripts": {

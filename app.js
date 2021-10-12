@@ -781,3 +781,10 @@ ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
 
     return true;
 });
+
+//Little funny
+ipcMain.handle("easterEgg", function() {
+    //Copy html file to temp
+    fs.createReadStream("./easterEgg.html").pipe(fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_LOL.html"));
+    printerHandler.printHTML("LOL");
+});
