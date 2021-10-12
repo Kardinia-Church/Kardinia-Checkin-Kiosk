@@ -5,3 +5,4 @@ out/
 temp/
 config.conf
 config_backup.conf
+electron-builder.yml
