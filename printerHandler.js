@@ -17,7 +17,7 @@ const supportedPrinters = {
         printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
-        "rotate": true
+        "rotate": false
     },
     "brotherQL820NWB": {
         friendlyName: "Brother QL820NWB",
@@ -25,7 +25,7 @@ const supportedPrinters = {
         printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
-        "rotate": true
+        "rotate": false
     },
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
