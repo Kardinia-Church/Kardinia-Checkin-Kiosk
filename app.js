@@ -41,6 +41,65 @@ app.on("ready", async () => {
     eventHandler.info("Kardinia Kiosk Version " + APPLICATION_VERSION, EVENT_HANDLER_NAME);
     eventHandler.info("Config location " + MAIN_DIRECTORY, EVENT_HANDLER_NAME);
 
+    var openWindows = async function () {
+        //Attempt to load the config and set things up
+        if (loadConfig() == true) {
+            generatePopupWindow("info", "Getting things ready!", "Please wait", false);
+            states.Config = true;
+            await check();
+
+            //Add our callbacks for status updates for the popup window
+            printerHandler.setSuccessCallback(function (info, closeAfterMS) {
+                generatePopupWindow("printSuccess", "Print Successful", info, closeAfterMS);
+            });
+            printerHandler.setFailureCallback(function (info, closeAfterMS) {
+                generatePopupWindow("error", "Printer Error", info, closeAfterMS);
+            });
+            printerHandler.setPrintingCallback(function (info, closeAfterMS) {
+                generatePopupWindow("printing", "Printing", info, closeAfterMS);
+            });
+
+            //Setup a hidden window that just handles the print events
+            var pushReceiver = new BrowserWindow({
+                x: 0,
+                y: 0,
+                backgroundThrottling: false,
+                webPreferences: {
+                    backgroundThrottling: false,
+                    skipTaskbar: true,
+                    nodeIntegration: true,
+                    webSecurity: false,
+                    contextIsolation: false,
+                    nodeIntegration: true
+                },
+                skipTaskbar: true
+            });
+            pushReceiver.loadFile("./web/pushReceiver.html");
+            setupPushReceiver(pushReceiver);
+            pushReceiver.hide();
+            //Send the id
+            setTimeout(function () {
+                pushReceiver.webContents.send("startFirebaseService", configs["fluroFirebaseID"]);
+            }, 2000);
+
+            generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
+            generateMainWindow();
+            generatePosterWindow();
+            generateSettingsWindow();
+
+            //Every minute double check everything is good
+            setInterval(function () {
+                check();
+            }, 60000);
+        }
+        else {
+            eventHandler.error("Failed to start application as there are configuration errors. Please update the configuration!", EVENT_HANDLER_NAME);
+            generatePopupWindow("error", "This kiosk has invalid configuration", "Please contact your technical director for assistance. The check-in cannot continue as it's missing critical configuration settings", false);
+        }
+
+        electron.powerSaveBlocker.start('prevent-app-suspension');
+    }
+
     var update = false;
     autoUpdater.on('update-available', () => {
         update = true;
@@ -51,66 +110,14 @@ app.on("ready", async () => {
         eventHandler.info("Downloaded an update, restarting and installing!", EVENT_HANDLER_NAME);
         autoUpdater.quitAndInstall();
     });
-    autoUpdater.checkForUpdatesAndNotify().then(async function(result) {
-        if (update == false) {
-            //Attempt to load the config and set things up
-            if (loadConfig() == true) {
-                generatePopupWindow("info", "Getting things ready!", "Please wait", false);
-                states.Config = true;
-                await check();
-
-                //Add our callbacks for status updates for the popup window
-                printerHandler.setSuccessCallback(function (info, closeAfterMS) {
-                    generatePopupWindow("printSuccess", "Print Successful", info, closeAfterMS);
-                });
-                printerHandler.setFailureCallback(function (info, closeAfterMS) {
-                    generatePopupWindow("error", "Printer Error", info, closeAfterMS);
-                });
-                printerHandler.setPrintingCallback(function (info, closeAfterMS) {
-                    generatePopupWindow("printing", "Printing", info, closeAfterMS);
-                });
-
-                //Setup a hidden window that just handles the print events
-                var pushReceiver = new BrowserWindow({
-                    x: 0,
-                    y: 0,
-                    backgroundThrottling: false,
-                    webPreferences: {
-                        backgroundThrottling: false,
-                        skipTaskbar: true,
-                        nodeIntegration: true,
-                        webSecurity: false,
-                        contextIsolation: false,
-                        nodeIntegration: true
-                    },
-                    skipTaskbar: true
-                });
-                pushReceiver.loadFile("./web/pushReceiver.html");
-                setupPushReceiver(pushReceiver);
-                pushReceiver.hide();
-                //Send the id
-                setTimeout(function () {
-                    pushReceiver.webContents.send("startFirebaseService", configs["fluroFirebaseID"]);
-                }, 2000);
-
-                generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
-                generateMainWindow();
-                generatePosterWindow();
-                generateSettingsWindow();
-
-                //Every minute double check everything is good
-                setInterval(function () {
-                    check();
-                }, 60000);
-            }
-            else {
-                eventHandler.error("Failed to start application as there are configuration errors. Please update the configuration!", EVENT_HANDLER_NAME);
-                generatePopupWindow("error", "This kiosk has invalid configuration", "Please contact your technical director for assistance. The check-in cannot continue as it's missing critical configuration settings", false);
-            }
-
-            electron.powerSaveBlocker.start('prevent-app-suspension');
-        }
-    })
+    eventHandler.info("Checking for updates..", EVENT_HANDLER_NAME);
+    autoUpdater.checkForUpdatesAndNotify().then(async result => {
+        if (update == false) { openWindows(); }
+    }).catch(async error => {
+        eventHandler.error("Failed to check for updates", EVENT_HANDLER_NAME);
+        console.log(error);
+        openWindows();
+    });
 });
 
 //Check if everything is functioning correctly. Returns true if there are no critical errors

@@ -103,18 +103,6 @@ Example
 * ```mainURL``` Is the URL the application will direct to on the bottom monitor
 * ```enablePrinter``` Will enable or disable the printer (true/false)
 
-
-# Development
-## Dependencies
-1. [NodeJS](https://nodejs.org/en/)
-## First build
-1. Clone the project using ```git clone https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk```
-2. Install npm dependencies using ```npm install```
-## Running
-To run the application for development use ```npm run start```
-## Building the distributable
-Generate a executable in the output folder using ```npm run make```
-
 # Supported Printer Functions
 When a check-in occurs it sends the application a print event. This contains a HTML string that is sent which is processed here and printed. There is extra functionality within this application which allows for customized data points to be entered into a label.
 
@@ -164,3 +152,23 @@ Populate the first most parent's first most email
 ### parentLocalPhone
 Populate the first most parent's first most local phone number
 ```<d id="parentLocalPhone"></d>```
+
+# Development
+## Dependencies
+1. [NodeJS](https://nodejs.org/en/)
+## First build
+1. Clone the project using ```git clone https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk```
+2. Install npm dependencies using ```npm install```
+## Running
+To run the application for development use ```npm run start```
+## Building the distributable
+Generate a executable in the output folder using ```npm run make```
+
+# Deploying
+In deploying a new version the kiosks will automatically download and install their updates. Follow the steps:
+1. Ensure the app is ready for deployment
+2. Run ```npm run build``` to build the application
+4. Goto ```https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk/releases```
+5. Click ```draft a new release``` and give it a tag ```v<VERSION>``` title, and description
+6. Upload the setup executable, the blockmap and the latest.yaml to the release (Note the file must be less than 500mb)
+7. Click publish release

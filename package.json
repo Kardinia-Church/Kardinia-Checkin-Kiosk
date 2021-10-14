@@ -1,6 +1,6 @@
 {
   "name": "kardinia-kiosk-checkin",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "Kardinia Checkin Kiosk",
   "main": "app.js",
   "scripts": {
@@ -35,6 +35,19 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk.git"
+  },
+  "build": {
+    "productName": "Kardinia Kiosk",
+    "nsis": {
+      "artifactName": "KardiniaKiosk.setup.${version}.${ext}",
+      "uninstallDisplayName": "Kardinia Kiosk"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk/releases/latest/download/",
+      "channel": "latest"
+    },
+    "appId": "com.kardiniachurch.KardiniaCheckinApplication"
   },
   "config": {
     "forge": {
