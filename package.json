@@ -37,10 +37,10 @@
     "url": "https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk.git"
   },
   "build": {
-    "productName": "Kardinia Kiosk",
+    "productName": "KardiniaKiosk",
     "nsis": {
       "artifactName": "KardiniaKiosk.setup.${version}.${ext}",
-      "uninstallDisplayName": "Kardinia Kiosk"
+      "uninstallDisplayName": "KardiniaKiosk"
     },
     "publish": {
       "provider": "generic",
