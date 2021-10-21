@@ -50,7 +50,7 @@ module.exports = {
     printerRotate: undefined,
     enablePopups: true,
     gotInformationFromFluro: false,
-    enabled: true,
+    enabled: false,
     printerType: undefined,
     successCallback: () => { },
     failureCallback: () => { },

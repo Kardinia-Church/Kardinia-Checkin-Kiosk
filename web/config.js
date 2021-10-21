@@ -2,8 +2,7 @@
 async function update() {
     console.log("Update window");
     showLoader(true, "main");
-    await getKioskInformation();
-    updateStates(await getStates());
+    updateStates(await getStates(), await getKioskInformation());
 
     //Update our HTML fields
     //Add our options
@@ -27,7 +26,8 @@ async function update() {
 }
 
 //Update the HTML status indicators
-function updateStates(states) {
+function updateStates(states, kioskInformation) {
+
     //Update the status
     document.getElementById("checks").innerHTML = "";
     for (var i in states) {
@@ -55,8 +55,7 @@ function updateStates(states) {
 //Toggle the printer on or off
 async function togglePrinter() {
     enablePrinter("toggle");
-    await getKioskInformation();
-    updateStates(await getStates());
+    updateStates(await getStates(), await getKioskInformation());
 }
 
 window.onload = async function () {
@@ -70,14 +69,14 @@ window.onload = async function () {
     }
     setTimeout(function () { document.getElementById("debug").scrollTop = document.getElementById("debug").scrollHeight; }, 3000);
 
-    //Update this window every 60 seconds
-    setInterval(function () {
-        update();
-    }, 500000);
+    // //Update this window every 60 seconds
+    // setInterval(function () {
+    //     update();
+    // }, 500000);
 
     //When the status updates
-    onStatusUpdate(function (event, status) {
-        updateStates(status);
+    onStatusUpdate(async function (event, status) {
+        updateStates(status, await getKioskInformation());
     });
 
     //When logs come in
@@ -142,6 +141,7 @@ function closeConfigWindow() {
 async function openDropDown(id) {
     if (id == "modeSelection") {
         //If we're not fully connected show warnings
+        await update();
         var checks = await getStates();
         var criticalError = false;
         if (checks["Config"] !== true) { openPopupWindow("error", "Cannot continue", "Sorry there are configuration errors, this check-in cannot continue. Please check the configuration or contact a campus technical director", 5000); criticalError = true; }

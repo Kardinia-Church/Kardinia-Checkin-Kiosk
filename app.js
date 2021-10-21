@@ -118,6 +118,10 @@ app.on("ready", async () => {
         console.log(error);
         openWindows();
     });
+
+
+    //Enable the printer after a bit
+    setTimeout(function() {printerHandler.setPrinterEnable(true); check();}, 5000);
 });
 
 //Check if everything is functioning correctly. Returns true if there are no critical errors
