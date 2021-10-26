@@ -290,7 +290,7 @@ module.exports = {
                 inputPath: inputPath,
                 outputPath: outputPath,
                 pdf: {
-                    printBackground: false,
+                    printBackground: true,
                     width: this.printerWidth + "mm",
                     height: this.printerHeight + "mm",
                     landscape: !this.printerRotate

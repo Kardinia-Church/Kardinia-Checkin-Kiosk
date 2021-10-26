@@ -10,3 +10,5 @@ First stable release.
 * Fixed a bug where the checkin modes would not be cleared when populated
 * Fixed a bug where the printer templates would not be cleared when populated
 * Added console log for HTML for ticket (for debug purposes)
+## v2.2.4
+# Enabled printing of backgrounds
