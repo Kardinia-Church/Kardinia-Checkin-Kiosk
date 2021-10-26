@@ -6,3 +6,7 @@ First stable release.
 ## v2.2.2
 * Removed polling for kiosk states every 60 seconds in the configuration page as this would effectively spam Fluro if the kiosk was left on for a long period of time
 * Printer will be disabled for the first few seconds to avoid printing unwanted labels
+## v2.2.3
+* Fixed a bug where the checkin modes would not be cleared when populated
+* Fixed a bug where the printer templates would not be cleared when populated
+* Added console log for HTML for ticket (for debug purposes)

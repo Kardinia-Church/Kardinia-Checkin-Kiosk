@@ -775,6 +775,7 @@ ipcMain.handle("setTokenToPrinter", async function (event, token) {
 
 //Called when a print notification comes from firebase
 ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
+    console.log(incoming);
     if (incoming.data.html === undefined) { return; }
     if (printerHandler.enabled) {
         eventHandler.info("Got print notification for " + incoming.data.title, EVENT_HANDLER_NAME);

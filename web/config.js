@@ -7,6 +7,7 @@ async function update() {
     //Update our HTML fields
     //Add our options
     var element = document.getElementById("modeSelection");
+    element.innerHTML = "";
     for (var i in kioskInformation.modes) {
         var mode = document.createElement("a");
         mode.href = "#";
@@ -215,8 +216,6 @@ async function openPrinterSettings(show) {
         hideShowElements("advanced", "loader");
         var printerSettings = await getPrinterSettings();
 
-        console.log(printerSettings);
-
         //Populate the printer types
         var printerTypes = document.getElementById("printerType");
         printerTypes.innerHTML = "<option value='disable'>Disabled</option> <option value='custom'>Custom</option>";
@@ -244,6 +243,7 @@ async function openPrinterSettings(show) {
             var fluroPrinterNameTagTemplate = document.getElementById("fluroPrinterNameTagTemplate");
             var fluroPrinterParentTemplate = document.getElementById("fluroPrinterParentTemplate");
             fluroPrinterNameTagTemplate.innerHTML = "";
+            fluroPrinterParentTemplate.innerHTML = "";
             for (var i = 0; i < printerSettings.fluroTemplates.length; i++) {
                 switch (printerSettings.fluroTemplates[i].data.type) {
                     case "child": {
