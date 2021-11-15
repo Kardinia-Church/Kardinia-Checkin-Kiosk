@@ -308,7 +308,7 @@ module.exports = {
         try {
             await run()
             //Delete the HTML file
-            await fs.promises.unlink(inputPath);
+            //await fs.promises.unlink(inputPath);
             return true;
         } catch (error) {
             return error;
@@ -339,7 +339,7 @@ module.exports = {
                         self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
                         self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
                         //Delete our pdf
-                        await fs.promises.unlink(file);
+                        //await fs.promises.unlink(file);
                     }
                     catch (error) {
                         self.failureCallback("Something happened while communicating with the printer", 3000);
