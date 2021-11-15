@@ -12,3 +12,5 @@ First stable release.
 * Added console log for HTML for ticket (for debug purposes)
 ## v2.2.4
 # Enabled printing of backgrounds
+## v2.2.5
+# Disabled the "exit configuration" button if there is no mode set

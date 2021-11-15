@@ -1,3 +1,5 @@
+var modeWasSet = false;
+
 //Update our page with information from the main process
 async function update() {
     console.log("Update window");
@@ -131,6 +133,12 @@ function addDebug(type, message, domain) {
 
 //Close the configuration window
 function closeConfigWindow() {
+    //If the mode was not selected yet do not allow the user to close the configuration window
+    if(!modeWasSet) {
+        openPopupWindow("warning", "Please Select a Mode", "Please select a kiosk mode before closing the configuration window", 5000);
+        return;
+    }
+
     closeWindow("settingsWindow").then((result) => {
         console.log(result);
     }).catch((error) => {
@@ -198,6 +206,7 @@ function resizeDebug() {
 function updateKioskMode(modeId) {
     var mode = kioskInformation.modes[modeId];
     if (mode) {
+        modeWasSet = true;
         console.log(mode);
         console.log("Change kiosk mode to " + mode.label);
         setMainWindowURL(mode.mainURL);
