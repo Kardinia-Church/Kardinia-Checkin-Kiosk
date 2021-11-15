@@ -134,7 +134,7 @@ function addDebug(type, message, domain) {
 //Close the configuration window
 function closeConfigWindow() {
     //If the mode was not selected yet do not allow the user to close the configuration window
-    if(!modeWasSet) {
+    if (!modeWasSet) {
         openPopupWindow("warning", "Please Select a Mode", "Please select a kiosk mode before closing the configuration window", 5000);
         return;
     }
@@ -209,10 +209,19 @@ function updateKioskMode(modeId) {
         modeWasSet = true;
         console.log(mode);
         console.log("Change kiosk mode to " + mode.label);
-        setMainWindowURL(mode.mainURL);
-        setPosterWindowURL(mode.posterURL);
+        setMainWindowURL();
+        setPosterWindowURL();
         enablePrinter(mode.enablePrinter);
-        closeConfigWindow();
+        showLoader(true, "main");
+
+        //After a little bit load
+        setTimeout(function () {
+            setMainWindowURL(mode.mainURL);
+            setPosterWindowURL(mode.posterURL);
+            setTimeout(function () {
+                closeConfigWindow();
+            }, 500);
+        }, 500);
     }
     else {
         console.log("The mode was not found");

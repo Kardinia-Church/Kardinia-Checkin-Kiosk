@@ -121,7 +121,7 @@ app.on("ready", async () => {
 
 
     //Enable the printer after a bit
-    setTimeout(function() {printerHandler.setPrinterEnable(true); check();}, 5000);
+    setTimeout(function () { printerHandler.setPrinterEnable(true); check(); }, 5000);
 });
 
 //Check if everything is functioning correctly. Returns true if there are no critical errors
@@ -607,6 +607,11 @@ ipcMain.handle("getLogs", function (event) {
 
 //Change the poster URL
 ipcMain.handle("changePosterURL", function (event, url) {
+    if (url === undefined) {
+        try { windows["posterWindow"].loadFile("./web/blank.html"); }
+        catch (e) { }
+        return;
+    }
     eventHandler.info("Changed poster window URL to " + url, EVENT_HANDLER_NAME);
     try { windows["posterWindow"].loadURL(url); }
     catch (e) { }
@@ -615,6 +620,11 @@ ipcMain.handle("changePosterURL", function (event, url) {
 
 //Change the main window URL
 ipcMain.handle("changeMainURL", function (event, url) {
+    if (url === undefined) {
+        try { windows["mainWindow"].loadFile("./web/blank.html"); }
+        catch (e) { }
+        return;
+    }
     eventHandler.info("Changed main window URL to " + url, EVENT_HANDLER_NAME);
     try { windows["mainWindow"].loadURL(url); }
     catch (e) { }
