@@ -132,3 +132,8 @@ function issueTestPrint() {
 function enablePrinter(state) {
     return ipcRenderer.invoke("enablePrinter", state);
 }
+
+//Get the current window URLs
+function getWindowURLS() {
+    return ipcRenderer.invoke("getWindowURLS");
+}

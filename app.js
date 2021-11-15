@@ -361,7 +361,7 @@ function generateMainWindow() {
         }, 1000);
     });
 
-    windows["mainWindow"].loadFile("./web/blank.html");
+    //windows["mainWindow"].loadFile("./web/blank.html");
     return windows["mainWindow"];
 }
 function generatePosterWindow() {
@@ -381,7 +381,7 @@ function generatePosterWindow() {
         frame: developmentMode,
         skipTaskbar: true
     });
-    windows["posterWindow"].loadFile("./web/blank.html");
+    //windows["posterWindow"].loadFile("./web/blank.html");
     windows["posterWindow"].webContents.on("did-finish-load", function () {
         try {
             windows["posterWindow"].webContents.executeJavaScript("document.getElementsByTagName('html')[0].style.overflow = 'hidden';"); //Disable scroll bars
@@ -629,6 +629,24 @@ ipcMain.handle("changeMainURL", function (event, url) {
     try { windows["mainWindow"].loadURL(url); }
     catch (e) { }
     return true;
+});
+
+//Get the current URLs of the windows
+ipcMain.handle("getWindowURLS", function(event) {
+    var mainURL = undefined;
+    var posterURL = undefined;
+    try {
+        mainURL = windows["mainWindow"].webContents.getURL();
+    }
+    catch(e){}
+    try {
+        posterURL = windows["posterWindow"].webContents.getURL();
+    }
+    catch(e){}
+    return {
+        mainURL,
+        posterURL
+    }
 });
 
 //Close a window
