@@ -83,13 +83,20 @@ module.exports = {
         });
     },
 
-    //Do the api calls for a set of domains and return an object with merged values
-    apiGet: function (personId, selectors) {
+    /**
+     * Do the api calls for a set of domains and return an object with merged values
+     *
+     * Possible calls include
+     * contact
+     * contactDepth
+     * family
+    **/
+    apiGet: function (checkinId, personId, selectors) {
         var self = this;
         var ret = {};
         return new Promise((resolve, reject) => {
             //Set our contact get first as this is required
-            if(personId === undefined || personId == ""){resolve(undefined);} //If there is no person id return nothing
+            if (personId === undefined || personId == "") { resolve(undefined); } //If there is no person id return nothing
             self.fluro.api.get("/content/contact/" + personId, {
                 cache: false,
                 params: {
@@ -169,11 +176,10 @@ module.exports = {
     },
 
     //Handle a print request
-    handlePrintRequest: function (request) {
+    handlePrintRequest: async function (request) {
         var self = this;
         var title = request.data.title;
         var html = HTMLParser.parse(request.data.html);
-
 
         var write = function () {
             fs.writeFile(self.htmlPath + "temp_" + request.data.uuid + ".html", html.outerHTML, function (error, result) {
@@ -187,13 +193,64 @@ module.exports = {
         }
 
         //Edit the HTML with our extra fields
-        try {
-            var checkinId = html.querySelector("#checkinId").innerHTML;
-            var contactId = html.querySelector("#contactId").innerHTML;
-            html.querySelector("#checkinId").remove();
-            html.querySelector("#contactId").remove();
+        var checkinId = "";
+        var checkinEvent = "";
+        var contactId = "";
+        try { checkinId = html.querySelector("#checkinId").innerHTML; html.querySelector("#checkinId").remove(); } catch (e) { }
+        try { checkinEvent = html.querySelector("#checkinEvent").innerHTML; html.querySelector("#checkinEvent").remove(); } catch (e) { }
+        try { contactId = html.querySelector("#contactId").innerHTML; html.querySelector("#contactId").remove(); } catch (e) { }
+
+        /**
+         * Hide show elements based on the event / other parameters
+         */
+
+        //Fuze
+        if (!checkinEvent.toLowerCase().includes("fuze")) {
+            try { html.querySelector("#ifFuze").remove(); } catch (e) { }
         }
-        catch (e) { }
+
+        //Playgroups
+        if (!checkinEvent.toLowerCase().includes("playgroups")) {
+            try { html.querySelector("#ifPlaygroups").remove(); } catch (e) { }
+        }
+
+        //Service
+        if (!checkinEvent.toLowerCase().includes("service")) {
+            try { html.querySelector("#ifService").remove(); } catch (e) { }
+        }
+
+        //If this is a service label change the label based on the contact information
+        if (checkinEvent.toLowerCase().includes("service")) {
+            var found = false;
+
+            //Search for the contact within these groups. The key will be populated to the title if they are a member
+            var groups = {
+                "Kids Leader": this.fluro.api.get("/content/team/5fd4058b349139729074df18"),
+                "Kids Junior Leader": this.fluro.api.get("/content/team/609a0eefadfab73b1cdd5c96"),
+                "Kids Parent Helper": this.fluro.api.get("/content/team/609a0f17c86b9537dbfdb9ff"),
+            }
+
+            for (var i in groups) {
+                var current = await groups[i];
+                for (var j = 0; j < current.data.provisionalMembers.length; j++) {
+                    if (current.data.provisionalMembers[j]._id == contactId) {
+                        try { html.querySelector("#labelTitle").innerHTML = i; } catch (e) { }
+                        try { html.querySelector("#doNotPrintLabel").remove(); } catch (e) { } //Remove the doNotPrint so we do print a label
+                        found = true;
+                        break;
+                    }
+
+                }
+                if (found) { break; }
+            }
+        }
+
+        //Don't print the label if present
+        if (html.querySelector("#doNotPrintLabel") !== null) {
+            self.eventHandler.info("No need to print this label", EVENT_HANDLER_NAME);
+            return;
+        }
+
 
         if (checkinId != undefined && contactId != undefined) {
             self.eventHandler.info("Getting more detailed information from Fluro", EVENT_HANDLER_NAME);
@@ -348,6 +405,31 @@ module.exports = {
              * Health concerns etc
              */
 
+            //Populate the shapes element
+            if (html.querySelector("#checkinShapes") != null) {
+                pushSelector("contact");
+                pushSelector("contactDepth");
+                callbacks.push(function (result) {
+                    try {
+                        var hasHealthConcerns = result.contact.details.medicalandHealth.data.healthConcerns;
+                        var hasCustodyArrangements = result.contact.details.medicalandHealth.data.custodyArrangements;
+                        var hasMedication = result.contact.details.medicalandHealth.data.medication || result.contact.details.medicalandHealth.data.medicationDetails;
+                        var hasMediaRelease = result.contact.details.medicalandHealth.data.mediaRelease == "Yes";
+                        var hasAllergies = result.contact.details.medicalandHealth.data.allergies || result.contact.details.medicalandHealth.data.allergiesDetails;
+                        var hasDietary = result.contact.details.medicalandHealth.data.doyouhaveanydietaryneeds || result.contact.details.medicalandHealth.data.dietaryNeeds.length > 0 || result.contact.details.medicalandHealth.data.dietaryOther;
+
+                        if (hasHealthConcerns) { html.querySelector("#checkinShapes").innerHTML += "<p>&FilledSmallSquare;</p>"; }
+                        if (hasCustodyArrangements) { html.querySelector("#checkinShapes").innerHTML += "<p>&bigstar;</p>"; }
+                        if (hasMedication) { html.querySelector("#checkinShapes").innerHTML += "<p>&sung;</p>"; }
+                        if (!hasMediaRelease) { html.querySelector("#checkinShapes").innerHTML += "<p>&CirclePlus;</p>"; }
+                        if (hasAllergies) { html.querySelector("#checkinShapes").innerHTML += "<p>&boxtimes;</p>"; }
+                        if (hasDietary) { html.querySelector("#checkinShapes").innerHTML += "<p>&phone;</p>"; }
+                    }
+                    catch (e) { }
+                });
+            }
+
+
             //Populate the contact's emergency contact(s)
             if (html.querySelector("#emergencyContacts") != null) {
                 pushSelector("contact");
@@ -429,7 +511,7 @@ module.exports = {
                             html.querySelector("#dietaries").innerHTML = "none";
                         }
                     }
-                    catch (e) {}
+                    catch (e) { }
                 });
             }
 
@@ -455,7 +537,7 @@ module.exports = {
 
             //Do our API call and callback to the above fns when completed
             if (selectors.length > 0) {
-                self.apiGet(contactId, selectors).then((result) => {
+                self.apiGet(checkinId, contactId, selectors).then((result) => {
                     for (var i = 0; i < callbacks.length; i++) {
                         callbacks[i](result);
                     }

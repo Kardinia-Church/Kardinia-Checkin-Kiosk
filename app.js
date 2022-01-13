@@ -812,8 +812,6 @@ ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
             eventHandler.info("Page is blank ignoring", EVENT_HANDLER_NAME);
             return false;
         }
-
-        generatePopupWindow("info", "Getting Ready!", "Getting some information, please wait..", false);
         fluroHandler.handlePrintRequest(incoming);
     }
     else {
@@ -829,4 +827,21 @@ ipcMain.handle("easterEgg", function () {
     var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_LOL.html", { flags: "w" });
     out.write("<html>(╯°□°）╯︵ ┻━┻</html>");
     printerHandler.printHTML("LOL");
+});
+
+//Print a label showing the shapes and what they mean
+ipcMain.handle("printShapes", function () {
+    //Copy html file to temp
+    var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_shapes.html", { flags: "w" });
+    out.write(`
+    <html>
+    <h1>Has Health Concerns: &FilledSmallSquare;</h1>
+    <h1>Has Custody Arrangements: &bigstar;</h1>
+    <h1>Has Medication: &sung;</h1>
+    <h1>No Media Release: &CirclePlus;</h1>
+    <h1>Has Allergies: &boxtimes;</h1>
+    <h1>Has Dietary Requirements: &phone;</h1>
+    </html>
+    `);
+    printerHandler.printHTML("shapes");
 });

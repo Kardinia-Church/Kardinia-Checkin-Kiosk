@@ -153,6 +153,22 @@ Populate the first most parent's first most email
 Populate the first most parent's first most local phone number
 ```<d id="parentLocalPhone"></d>```
 
+### doNotPrintLabel
+Will disable the printing of the label entirely
+```<p id="doNotPrintLabel"></p>```
+### ifFuze
+Will hide the element if the event name doesn't contain "fuze"
+```<div id="ifFuze"><div>```
+### ifPlaygroups
+Will hide the element if the event name doesn't contain "playgroups"
+```<div id="ifPlaygroups"><div>```
+### ifService
+Will hide the element if the event name doesn't contain "service"
+```<div id="ifService"><div>```
+### labelTitle
+Special case for if the event is a service. This will populate the label title based on what service team they are apart of
+```<h1 id="labelTitle"></h1>```
+
 # Development
 ## Dependencies
 1. [NodeJS](https://nodejs.org/en/)

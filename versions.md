@@ -16,3 +16,6 @@ First stable release.
 * Disabled the "exit configuration" button if there is no mode set
 * Fixed a styling issue with the drop down menu for the modes
 * When changing a mode, changed the pages to display a blank page as the previous implementation was confusing 
+## v2.3.0
+* Added extra label functionality
+* Added shapes functionality to labels

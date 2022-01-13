@@ -120,7 +120,7 @@ label, select, input {
     border: none;
     cursor: pointer;
     width: 50vw;
-    height: 5vw;
+    height: 4vw;
     border-radius: 30px;
 }
 .dropbtn:hover, .dropbtn:focus {

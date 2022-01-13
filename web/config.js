@@ -347,3 +347,7 @@ function openTroubleshootingPage(page) {
 function easterEgg() {
     ipcRenderer.invoke("easterEgg");
 }
+
+function printShapes() {
+    ipcRenderer.invoke("printShapes");
+}
