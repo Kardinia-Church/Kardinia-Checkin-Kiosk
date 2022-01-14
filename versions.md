@@ -22,3 +22,5 @@ First stable release.
 ## v2.3.1
 * Fixed sizing of the shapes print out
 * DYMO printers are no longer supported on this version (will print incorrectly). Will aim to fix this at a later date
+
+
