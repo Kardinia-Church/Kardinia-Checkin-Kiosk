@@ -835,12 +835,12 @@ ipcMain.handle("printShapes", function () {
     var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_shapes.html", { flags: "w" });
     out.write(`
     <html>
-    <h1>Has Health Concerns: &FilledSmallSquare;</h1>
-    <h1>Has Custody Arrangements: &bigstar;</h1>
-    <h1>Has Medication: &sung;</h1>
-    <h1>No Media Release: &CirclePlus;</h1>
-    <h1>Has Allergies: &boxtimes;</h1>
-    <h1>Has Dietary Requirements: &phone;</h1>
+    <h2>Has Health Concerns: &FilledSmallSquare;</h2>
+    <h2>Has Custody Arrangements: &bigstar;</h2>
+    <h2>Has Medication: &sung;</h2>
+    <h2>No Media Release: &CirclePlus;</h2>
+    <h2>Has Allergies: &boxtimes;</h2>
+    <h2>Has Dietary Requirements: &phone;</h2>
     </html>
     `);
     printerHandler.printHTML("shapes");
