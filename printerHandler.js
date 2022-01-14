@@ -30,6 +30,7 @@ const supportedPrinters = {
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
         USBName: "DYMO LabelWriter 450 Turbo",
+        printOptions: ['-print-settings "fit"'],
         "width": 54,
         "height": 101,
         "rotate": false
@@ -175,7 +176,7 @@ module.exports = {
     setPrinterType: function (type) {
         if (supportedPrinters[type] === undefined) {
             this.eventHandler.error("Printer type " + type + " does not exist", EVENT_HANDLER_NAME);
-            if(this.printerType) {
+            if (this.printerType) {
                 return false;
             }
             else {
@@ -284,7 +285,7 @@ module.exports = {
         if (this.printerUSBName === undefined) { return "no printer set"; }
         var inputPath = this.inputPath + "temp_" + id + ".html";
         var outputPath = this.outputPath + "temp_" + id + ".pdf";
-        var exePath =  require("puppeteer").executablePath().replace('app.asar', 'app.asar.unpacked'); //Fix a bug when the application is deployed
+        var exePath = require("puppeteer").executablePath().replace('app.asar', 'app.asar.unpacked'); //Fix a bug when the application is deployed
         const run = async () => {
             const html5ToPDF = new HTML5ToPDF({
                 inputPath: inputPath,
@@ -321,6 +322,30 @@ module.exports = {
         this.eventHandler.info("Printing label", EVENT_HANDLER_NAME);
         this.printCallback("Printing the label", false);
         if (await this.check() == true) {
+            // if (self.printerType.friendlyName == "DYMO Label Writer 450 Turbo") {
+            //     var self = this;
+            //     const puppeteer = require("puppeteer");
+            //     const fs = require("fs");
+
+            //     const browser = await puppeteer.launch({ headless: false, slowMo: true });
+            //     const page = await browser.newPage();
+            //     await page.goto(self.outputPath + "temp_" + id + ".html");
+            //     await page.evaluate(() => { window.print(); });
+            //     // await page.keyboard.down('Control');
+            //     // await page.keyboard.down('Shift');
+            //     // await page.keyboard.press('P');
+
+
+            //     self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
+            //     self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
+
+            //     // const html = await page.content();
+            //     // fs.writeFileSync("index.html", html);
+            //     //await browser.close();
+            //     return;
+
+            // }
+
             var success = await self.buildPDF(id);
             if (success != true) {
                 self.failureCallback("Something happened while creating the label, please try again", 3000);
@@ -331,10 +356,11 @@ module.exports = {
 
                 var printToPrinter = async function (printer, printerPrintOptions, file) {
                     try {
-                        await pdfToPrinter.print(file, {
+                        var options = {
                             printer: printer,
-                            win32: printerPrintOptions
-                        });
+                            win32: printerPrintOptions,
+                        };
+                        await pdfToPrinter.print(file, options);
 
                         self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
                         self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
