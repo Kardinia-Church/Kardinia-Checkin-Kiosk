@@ -310,7 +310,7 @@ function generateMainWindow() {
                 clearTimeout(buttonTimeout);
                 buttonTimeout = setTimeout(function () {
                     buttonClicked = false;
-                }, 5000);
+                }, 10000);
             }
             else if (buttonClicked == true) {
                 buttonClicked = false;
@@ -322,8 +322,8 @@ function generateMainWindow() {
             var button = document.createElement("button");
             button.style.position = "absolute";
             button.style.zIndex = 9999999;
-            button.style.width = "3vw";
-            button.style.height = "3vw";
+            button.style.width = "4vw";
+            button.style.height = "4vw";
             button.style.opacity = 0;
             button.onclick = function () {
                 buttonEvent(corner);

@@ -25,4 +25,4 @@ First stable release.
 ## v2.3.2
 * Fixed DYMO printers
 * Fixed sizing issues with the shapes print out
-
+* Increased timeout and made the buttons larger to make getting back to the config screen easier
