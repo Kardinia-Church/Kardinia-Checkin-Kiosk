@@ -6,7 +6,7 @@ const supportedPrinters = {
     "microsoftPDF": {
         friendlyName: "PDF",
         USBName: "Microsoft Print to PDF",
-        printOptions: ['-print-settings paper="A4"'],
+        // printOptions: ['-print-settings paper="A4"'],
         "width": 100,
         "height": 100,
         "rotate": false
@@ -14,7 +14,7 @@ const supportedPrinters = {
     "brotherQL580N": {
         friendlyName: "Brother QL-580N",
         USBName: "Brother QL-580N",
-        printOptions: ['-print-settings "fit"'],
+        // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
         "rotate": false
@@ -22,7 +22,7 @@ const supportedPrinters = {
     "brotherQL820NWB": {
         friendlyName: "Brother QL820NWB",
         USBName: "Brother QL-820NWB",
-        printOptions: ['-print-settings "fit"'],
+        // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
         "rotate": false
@@ -30,7 +30,7 @@ const supportedPrinters = {
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
         USBName: "DYMO LabelWriter 450 Turbo",
-        printOptions: ['-print-settings "fit"'],
+        // printOptions: ['-print-settings "fit"'],
         "width": 54,
         "height": 101,
         "rotate": false
@@ -45,7 +45,6 @@ module.exports = {
     printerId: undefined,
     fluroPrinterId: undefined,
     printerUSBName: undefined,
-    printerPrintOptions: undefined,
     printerWidth: undefined,
     printerHeight: undefined,
     printerRotate: undefined,
@@ -185,7 +184,6 @@ module.exports = {
         }
         this.printerType = supportedPrinters[type];
         this.printerUSBName = supportedPrinters[type].USBName;
-        this.printerPrintOptions = supportedPrinters[type].printOptions;
         this.eventHandler.info("Printer set to: " + this.printerUSBName, EVENT_HANDLER_NAME);
     },
     //Get the list of supported predefined printer types
@@ -193,9 +191,8 @@ module.exports = {
         return supportedPrinters;
     },
     //Set the manual printer settings
-    setCustomPrinter: function (USBName, printOptions) {
+    setCustomPrinter: function (USBName) {
         this.printerUSBName = USBName;
-        this.printerPrintOptions = printOptions;
         this.eventHandler.info("Printer set to: " + this.printerUSBName, EVENT_HANDLER_NAME);
     },
 
@@ -309,7 +306,7 @@ module.exports = {
         try {
             await run()
             //Delete the HTML file
-            //await fs.promises.unlink(inputPath);
+            await fs.promises.unlink(inputPath);
             return true;
         } catch (error) {
             return error;
@@ -322,30 +319,6 @@ module.exports = {
         this.eventHandler.info("Printing label", EVENT_HANDLER_NAME);
         this.printCallback("Printing the label", false);
         if (await this.check() == true) {
-            // if (self.printerType.friendlyName == "DYMO Label Writer 450 Turbo") {
-            //     var self = this;
-            //     const puppeteer = require("puppeteer");
-            //     const fs = require("fs");
-
-            //     const browser = await puppeteer.launch({ headless: false, slowMo: true });
-            //     const page = await browser.newPage();
-            //     await page.goto(self.outputPath + "temp_" + id + ".html");
-            //     await page.evaluate(() => { window.print(); });
-            //     // await page.keyboard.down('Control');
-            //     // await page.keyboard.down('Shift');
-            //     // await page.keyboard.press('P');
-
-
-            //     self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
-            //     self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
-
-            //     // const html = await page.content();
-            //     // fs.writeFileSync("index.html", html);
-            //     //await browser.close();
-            //     return;
-
-            // }
-
             var success = await self.buildPDF(id);
             if (success != true) {
                 self.failureCallback("Something happened while creating the label, please try again", 3000);
@@ -354,26 +327,23 @@ module.exports = {
             else {
                 self.eventHandler.info("PDF generated, printing!", EVENT_HANDLER_NAME);
 
-                var printToPrinter = async function (printer, printerPrintOptions, file) {
-                    try {
-                        var options = {
-                            printer: printer,
-                            win32: printerPrintOptions,
-                        };
-                        await pdfToPrinter.print(file, options);
+                var printToPrinter = async function (printer, file) {
+                    const nodeCmd = require('node-cmd');
+                    nodeCmd.runSync(`PDFtoPrinter.exe ${file} "${printer}"`, function(error, data, stdError) {
+                        if(error) {
+                            self.failureCallback("Something happened while communicating with the printer", 3000);
+                            self.eventHandler.error("There was a problem while printing: " + error, EVENT_HANDLER_NAME);
+                        }
+                    });
 
-                        self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
-                        self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
-                        //Delete our pdf
-                        //await fs.promises.unlink(file);
-                    }
-                    catch (error) {
-                        self.failureCallback("Something happened while communicating with the printer", 3000);
-                        self.eventHandler.error("There was a problem while printing: " + error, EVENT_HANDLER_NAME);
-                    }
+                    self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
+                    self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
+                    
+                    //Delete our pdf
+                    await fs.promises.unlink(file);
                 }
 
-                await printToPrinter(self.printerUSBName, self.printerPrintOptions, self.outputPath + "temp_" + id + ".pdf");
+                await printToPrinter(self.printerUSBName, self.outputPath + "temp_" + id + ".pdf");
             }
         }
         else {

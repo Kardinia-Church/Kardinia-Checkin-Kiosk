@@ -835,6 +835,12 @@ ipcMain.handle("printShapes", function () {
     var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_shapes.html", { flags: "w" });
     out.write(`
     <html>
+    <style>
+    h3 {
+        padding-left: 40px;
+        font-size: 0.9em
+    }
+    </style>
     <h3>Has Health Concerns: &FilledSmallSquare;</h3>
     <h3>Has Custody Arrangements: &bigstar;</h3>
     <h3>Has Medication: &sung;</h3>

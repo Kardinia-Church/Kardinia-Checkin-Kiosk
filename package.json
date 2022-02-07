@@ -21,7 +21,8 @@
     "is-online": "9.0.1",
     "electron-push-receiver": "^2.1.2",
     "electron-updater": "^4.3.9",
-    "@fortawesome/fontawesome-free": "^5.15.4"
+    "@fortawesome/fontawesome-free": "^5.15.4",
+    "node-cmd": "^5.0.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.54",
