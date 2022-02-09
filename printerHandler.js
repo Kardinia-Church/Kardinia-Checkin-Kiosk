@@ -329,7 +329,8 @@ module.exports = {
 
                 var printToPrinter = async function (printer, file) {
                     const nodeCmd = require('node-cmd');
-                    nodeCmd.runSync(`PDFtoPrinter.exe ${file} "${printer}"`, function(error, data, stdError) {
+                    console.log(__dirname + `/../PDFtoPrinter.exe ${file} "${printer}"`);
+                    nodeCmd.runSync(__dirname + `/../PDFtoPrinter.exe ${file} "${printer}"`, function(error, data, stdError) {
                         if(error) {
                             self.failureCallback("Something happened while communicating with the printer", 3000);
                             self.eventHandler.error("There was a problem while printing: " + error, EVENT_HANDLER_NAME);

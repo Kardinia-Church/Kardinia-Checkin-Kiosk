@@ -43,6 +43,9 @@
       "artifactName": "KardiniaKiosk.setup.${version}.${ext}",
       "uninstallDisplayName": "KardiniaKiosk"
     },
+    "extraResources": [
+      "./PDFtoPrinter.exe"
+    ],
     "publish": {
       "provider": "generic",
       "url": "https://github.com/Kardinia-Church/Kardinia-Checkin-Kiosk/releases/latest/download/",
