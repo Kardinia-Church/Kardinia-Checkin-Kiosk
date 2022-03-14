@@ -11,6 +11,7 @@
 * Disabling the printer in certain modes
 * Campus specific modes
 * Auto updater
+* Default startup mode for specific checkin(s)
 
 # Features to come
 * Campus specific form auto filling
@@ -94,6 +95,10 @@ Example
 
     "campusModes": {
         "Campus1": ["mode1", "mode2"]
+    },
+
+    "kioskStartupModes": {
+        "KioskId": "mode2"
     }
 }
 ```

@@ -85,7 +85,21 @@ app.on("ready", async () => {
             generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
             generateMainWindow();
             generatePosterWindow();
-            generateSettingsWindow();
+
+            //If there is a default mode set in the configuration on Fluro then load it otherwise open the settings window
+            if (fluroHandler.kioskConfiguration.kioskStartupModes) {
+                var mode = fluroHandler.kioskConfiguration.modes[fluroHandler.kioskConfiguration.kioskStartupModes[configs["kioskId"]]];
+                if (mode) {
+                    changeMode(mode);
+                    eventHandler.info("Default mode set in configuration: " + mode.label, EVENT_HANDLER_NAME);
+                }
+                else {
+                    generateSettingsWindow();
+                }
+            }
+            else {
+                generateSettingsWindow();
+            }
 
             //Every minute double check everything is good
             setInterval(function () {
@@ -506,6 +520,38 @@ function restartApplication() {
     app.exit();
 }
 
+//Change the main window URL
+function changeMainWindowURL(url) {
+    if (url === undefined) {
+        try { windows["mainWindow"].loadFile("./web/blank.html"); }
+        catch (e) { }
+        return;
+    }
+    eventHandler.info("Changed main window URL to " + url, EVENT_HANDLER_NAME);
+    try { windows["mainWindow"].loadURL(url); }
+    catch (e) { }
+    return true;
+}
+
+//Change the poster window URL
+function changePosterWindowURL(url) {
+    if (url === undefined) {
+        try { windows["posterWindow"].loadFile("./web/blank.html"); }
+        catch (e) { }
+        return;
+    }
+    eventHandler.info("Changed poster window URL to " + url, EVENT_HANDLER_NAME);
+    try { windows["posterWindow"].loadURL(url); }
+    catch (e) { }
+    return true;
+}
+
+//Change the mode
+function changeMode(newMode) {
+    changeMainWindowURL(newMode.mainURL);
+    changePosterWindowURL(newMode.posterURL);
+}
+
 //Event handles
 eventHandler.on(eventHandler.error, function (info, domain) {
     console.log("[ERROR][" + domain + "] - " + info);
@@ -607,42 +653,26 @@ ipcMain.handle("getLogs", function (event) {
 
 //Change the poster URL
 ipcMain.handle("changePosterURL", function (event, url) {
-    if (url === undefined) {
-        try { windows["posterWindow"].loadFile("./web/blank.html"); }
-        catch (e) { }
-        return;
-    }
-    eventHandler.info("Changed poster window URL to " + url, EVENT_HANDLER_NAME);
-    try { windows["posterWindow"].loadURL(url); }
-    catch (e) { }
-    return true;
+    return changePosterWindowURL(url);
 });
 
 //Change the main window URL
 ipcMain.handle("changeMainURL", function (event, url) {
-    if (url === undefined) {
-        try { windows["mainWindow"].loadFile("./web/blank.html"); }
-        catch (e) { }
-        return;
-    }
-    eventHandler.info("Changed main window URL to " + url, EVENT_HANDLER_NAME);
-    try { windows["mainWindow"].loadURL(url); }
-    catch (e) { }
-    return true;
+    return changeMainWindowURL(url);
 });
 
 //Get the current URLs of the windows
-ipcMain.handle("getWindowURLS", function(event) {
+ipcMain.handle("getWindowURLS", function (event) {
     var mainURL = undefined;
     var posterURL = undefined;
     try {
         mainURL = windows["mainWindow"].webContents.getURL();
     }
-    catch(e){}
+    catch (e) { }
     try {
         posterURL = windows["posterWindow"].webContents.getURL();
     }
-    catch(e){}
+    catch (e) { }
     return {
         mainURL,
         posterURL

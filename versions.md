@@ -26,3 +26,5 @@ First stable release.
 * Fixed DYMO printers
 * Fixed sizing issues with the shapes print out
 * Increased timeout and made the buttons larger to make getting back to the config screen easier
+## v2.4.0
+* Added the ability to set a check-ins startup mode
