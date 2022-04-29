@@ -833,51 +833,52 @@ ipcMain.handle("setTokenToPrinter", async function (event, token) {
 
 //Called when a print notification comes from firebase
 ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
-    console.log(incoming);
     if (incoming.data.html === undefined) { return; }
     if (printerHandler.enabled) {
         eventHandler.info("Got print notification for " + incoming.data.title, EVENT_HANDLER_NAME);
-        if (incoming.data.html === undefined) { return false; }
-        if (incoming.data.html.length < 10) {
-            eventHandler.info("Page is blank ignoring", EVENT_HANDLER_NAME);
-            return false;
-        }
-        fluroHandler.handlePrintRequest(incoming);
+        fluroHandler.generatePrint(incoming.data.html).then(stickers => {
+            for (var i in stickers) {
+                stickers[i].id = i;
+                printerHandler.printSticker(stickers[i]);
+            }
+        }).catch(error => { });
     }
-    else {
-        eventHandler.info("Got print notification but the printer is disabled, ignoring", EVENT_HANDLER_NAME);
-    }
-
     return true;
 });
 
 //Little funny
 ipcMain.handle("easterEgg", function () {
-    //Copy html file to temp
-    var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_LOL.html", { flags: "w" });
-    out.write("<html>(╯°□°）╯︵ ┻━┻</html>");
-    printerHandler.printHTML("LOL");
+    printerHandler.printSticker({
+        html: `
+        "<html>(╯°□°）╯︵ ┻━┻</html>"
+        `,
+        data: {},
+        type: "",
+    });
 });
 
 //Print a label showing the shapes and what they mean
 ipcMain.handle("printShapes", function () {
-    //Copy html file to temp
-    var out = fs.createWriteStream(MAIN_DIRECTORY + "/temp/" + "temp_shapes.html", { flags: "w" });
-    out.write(`
-    <html>
-    <style>
-    h3 {
-        padding-left: 40px;
-        font-size: 0.9em
-    }
-    </style>
-    <h3>Has Health Concerns: &FilledSmallSquare;</h3>
-    <h3>Has Custody Arrangements: &bigstar;</h3>
-    <h3>Has Medication: &sung;</h3>
-    <h3>No Media Release: &CirclePlus;</h3>
-    <h3>Has Allergies: &boxtimes;</h3>
-    <h3>Has Dietary Requirements: &phone;</h3>
-    </html>
-    `);
-    printerHandler.printHTML("shapes");
+    printerHandler.printSticker({
+        html: `
+        <html>
+        <style>
+        h3 {
+            padding-left: 40px;
+            font-size: 0.8em
+        }
+        </style>
+        <h3>Has Health Concerns: &FilledSmallSquare;</h3>
+        <h3>Has Custody Arrangements: &bigstar;</h3>
+        <h3>Has Medication: &sung;</h3>
+        <h3>No Media Release: &CirclePlus;</h3>
+        <h3>Has Allergies: &boxtimes;</h3>
+        <h3>Has Dietary Requirements: &phone;</h3>
+        </html>
+        `,
+        data: {},
+        type: "",
+    });
+
+
 });

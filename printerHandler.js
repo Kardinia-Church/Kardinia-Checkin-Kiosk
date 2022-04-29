@@ -1,7 +1,8 @@
-const HTML5ToPDF = require("html5-to-pdf");
+// const HTML5ToPDF = require("html5-to-pdf");
 const pdfToPrinter = require("pdf-to-printer");
 const fs = require("fs");
 const EVENT_HANDLER_NAME = "Printer";
+const pdf = require("pdf-creator-node");
 const supportedPrinters = {
     "microsoftPDF": {
         friendlyName: "PDF",
@@ -17,7 +18,7 @@ const supportedPrinters = {
         // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
-        "rotate": false
+        "rotate": true
     },
     "brotherQL820NWB": {
         friendlyName: "Brother QL820NWB",
@@ -25,7 +26,7 @@ const supportedPrinters = {
         // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
-        "rotate": false
+        "rotate": true
     },
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
@@ -33,14 +34,13 @@ const supportedPrinters = {
         // printOptions: ['-print-settings "fit"'],
         "width": 54,
         "height": 101,
-        "rotate": false
+        "rotate": true
     }
 };
 
 module.exports = {
     eventHandler: undefined,
     fluroHandler: undefined,
-    inputPath: undefined,
     outputPath: undefined,
     printerId: undefined,
     fluroPrinterId: undefined,
@@ -61,14 +61,7 @@ module.exports = {
         this.eventHandler = eventHandler;
         this.fluroHandler = fluroHandler;
         this.printerId = printerId;
-        this.inputPath = mainDirectory + "/temp/";
         this.outputPath = mainDirectory + "/temp/";
-
-        //Ensure our directory is available
-        if (!fs.existsSync(this.inputPath)) {
-            this.eventHandler.info("Input directory didn't exist, created it", EVENT_HANDLER_NAME);
-            fs.mkdirSync(this.inputPath, { recursive: true });
-        }
 
         //Ensure our directory is available
         if (!fs.existsSync(this.outputPath)) {
@@ -215,17 +208,20 @@ module.exports = {
         });
     },
 
+    //TO BE DEPRECIATED
     //Get the list of printer templates from fluro
     getPrinterTemplatesFromFluro: async function () {
         try { return await this.fluroHandler.fluro.api.get("/printer/templates", { cache: false }); }
         catch (e) { return undefined; }
     },
 
+    //NEED TO UPDATE
     //Start a test print
     testPrint: function () {
         return this.fluroHandler.fluro.api.get("/printer/" + this.printerId + "/test", { cache: false });
     },
 
+    //NEED TO BE UPDATED
     //Create a new printer for our checkin on Fluro
     createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken) {
         var self = this;
@@ -276,80 +272,42 @@ module.exports = {
         });
     },
 
-    //Build the PDF file
-    buildPDF: async function (id) {
-        if (this.enabled == false) { return "printer disabled"; }
-        if (this.printerUSBName === undefined) { return "no printer set"; }
-        var inputPath = this.inputPath + "temp_" + id + ".html";
-        var outputPath = this.outputPath + "temp_" + id + ".pdf";
-        var exePath = require("puppeteer").executablePath().replace('app.asar', 'app.asar.unpacked'); //Fix a bug when the application is deployed
-        const run = async () => {
-            const html5ToPDF = new HTML5ToPDF({
-                inputPath: inputPath,
-                outputPath: outputPath,
-                pdf: {
-                    printBackground: true,
-                    width: this.printerWidth + "mm",
-                    height: this.printerHeight + "mm",
-                    landscape: !this.printerRotate
-                },
-                launchOptions: {
-                    executablePath: exePath
-                }
-            });
+    /**
+     * Print a PDF
+     * @param {string} filename 
+     */
+    printPDF: async function (filename) {
+        var self = this;
+        const nodeCmd = require('node-cmd');
+        nodeCmd.runSync(__dirname + `/../PDFtoPrinter.exe ${filename} "${self.printerUSBName}"`, function (error, data, stdError) {
+            if (error) {
+                self.failureCallback("Something happened while communicating with the printer", 3000);
+                self.eventHandler.error("There was a problem while printing: " + error, EVENT_HANDLER_NAME);
+            }
+        });
 
-            await html5ToPDF.start()
-            await html5ToPDF.build()
-            await html5ToPDF.close()
-        }
+        self.successCallback("Printed successfully to " + self.printerUSBName + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
+        self.eventHandler.info("Printed successfully to " + self.printerUSBName + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
 
-        try {
-            await run()
-            //Delete the HTML file
-            await fs.promises.unlink(inputPath);
-            return true;
-        } catch (error) {
-            return error;
-        }
+        //Delete our pdf
+        await fs.promises.unlink(filename);
     },
 
-    //Print the generated HTML file
-    printHTML: async function (id) {
+    /**
+     * Print a sticker
+     * @param {object} document The document to input 
+     */
+    printSticker: async function (document) {
         var self = this;
-        this.eventHandler.info("Printing label", EVENT_HANDLER_NAME);
-        this.printCallback("Printing the label", false);
-        if (await this.check() == true) {
-            var success = await self.buildPDF(id);
-            if (success != true) {
-                self.failureCallback("Something happened while creating the label, please try again", 3000);
-                self.eventHandler.error("Failed to build the PDF: " + success, EVENT_HANDLER_NAME);
-            }
-            else {
-                self.eventHandler.info("PDF generated, printing!", EVENT_HANDLER_NAME);
-
-                var printToPrinter = async function (printer, file) {
-                    const nodeCmd = require('node-cmd');
-                    console.log(__dirname + `/../PDFtoPrinter.exe ${file} "${printer}"`);
-                    nodeCmd.runSync(__dirname + `/../PDFtoPrinter.exe ${file} "${printer}"`, function(error, data, stdError) {
-                        if(error) {
-                            self.failureCallback("Something happened while communicating with the printer", 3000);
-                            self.eventHandler.error("There was a problem while printing: " + error, EVENT_HANDLER_NAME);
-                        }
-                    });
-
-                    self.successCallback("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
-                    self.eventHandler.info("Printed successfully to " + printer + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
-                    
-                    //Delete our pdf
-                    await fs.promises.unlink(file);
-                }
-
-                await printToPrinter(self.printerUSBName, self.outputPath + "temp_" + id + ".pdf");
-            }
-        }
-        else {
-            self.failureCallback("There was a problem printing your label", 3000);
-            self.eventHandler.error("The printer has invalid configuration, cannot print", EVENT_HANDLER_NAME);
-        }
+        document.path = `${this.outputPath}temp_${document.id}.pdf`;
+        pdf.create(document, {
+            border: "5mm",
+            height: (!self.printerRotate ? self.printerHeight : self.printerWidth) + "mm",
+            width: (!self.printerRotate ? self.printerWidth : self.printerHeight) + "mm",
+        }).then(async function (result) {
+            await self.printPDF(result.filename);
+        }).catch(error => {
+            console.log(error);
+        });
     }
 }

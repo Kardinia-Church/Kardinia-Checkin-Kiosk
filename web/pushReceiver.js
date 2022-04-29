@@ -25,6 +25,10 @@ ipcRenderer.on(TOKEN_UPDATED, (_, token) => {
 
 // Display notification
 ipcRenderer.on(NOTIFICATION_RECEIVED, (_, serverNotificationPayload) => {
+  console.log("HELLO");
+  console.log(serverNotificationPayload);
+
+
     ipcRenderer.invoke("gotPrintFromFirebase", serverNotificationPayload);
 });
 
