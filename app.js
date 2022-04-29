@@ -170,7 +170,7 @@ async function check() {
                         try {
 
                             printerHandler.printerType = printerHandler.getPrinterTypes()[Object.keys(printerHandler.getPrinterTypes())[0]];
-                            var result = await printerHandler.createNewPrinterFluro(fluroHandler, "KIOSK - " + configs["kioskId"], os.platform(), APPLICATION_VERSION, APPLICATION_NAME, "TOKEN NOT SET YET");
+                            var result = await printerHandler.createNewPrinterFluro(fluroHandler, "KIOSK - " + configs["kioskId"], os.platform(), APPLICATION_VERSION, APPLICATION_NAME, "TOKEN NOT SET YET", fluroHandler.kioskConfiguration.printTemplateId);
 
                             //Save the id to our settings and restart
                             config.set("fluroPrinterID", result.data._id);
@@ -269,7 +269,6 @@ function loadConfig() {
     readConfig("kioskId", "");
     readConfig("kioskCampus", "");
     readConfig("fluroFirebaseID", "");
-
     //We have something that has a default value alert of this
     if (error) {
 

@@ -125,9 +125,7 @@ module.exports = {
      * @returns A promise
      */
     getPrinterTemplate: function (type) {
-        id = {
-            "general": "626b6cd5b217120035fe2fcb",
-        }[type];
+        id = this.kioskConfiguration.templates[type];
 
         var self = this;
         return new Promise((resolve, reject) => {
@@ -170,6 +168,8 @@ module.exports = {
             self.getPrinterTemplate(type).then(result => {
                 var date = new Date(contact.created);
                 contact.date = `${date.toDateString()} ${date.toLocaleString().split(",")[1]}`;
+
+                console.log(contact);
 
                 var document = {
                     html: result.body,

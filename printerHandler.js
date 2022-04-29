@@ -223,21 +223,11 @@ module.exports = {
 
     //NEED TO BE UPDATED
     //Create a new printer for our checkin on Fluro
-    createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken) {
+    createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken, printLabelId) {
         var self = this;
+
+        console.log(printLabelId);
         return new Promise(async (resolve, reject) => {
-            try { var templates = await fluroHandler.fluro.api.get("/printer/templates", { cache: false }); }
-            catch (e) { reject("Error loading templates"); return; }
-
-            //Find templates to default to
-            var childTemplateId;
-            var parentTemplateId;
-            for (var i = 0; i < templates.data.length; i++) {
-                if (childTemplateId !== undefined && parentTemplateId !== undefined) { break; }
-                if (templates.data[i].data.type == "child") { childTemplateId = templates.data[i]._id; }
-                if (templates.data[i].data.type == "parent") { parentTemplateId = templates.data[i]._id; }
-            }
-
             fluroHandler.fluro.api.post("/printer/register", {
                 title: checkinId,
                 platform: platform,
@@ -250,8 +240,8 @@ module.exports = {
                     rotated: false,
                     width: self.printerType.width,
                     height: self.printerType.height,
-                    templateChild: childTemplateId,
-                    templateParent: parentTemplateId
+                    templateChild: printLabelId,
+                    templateParent: printLabelId //This technically doesn't work but eh
                 }
             }).then(resolve).catch(reject);
         });
