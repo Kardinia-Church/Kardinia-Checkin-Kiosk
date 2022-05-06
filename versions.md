@@ -28,3 +28,5 @@ First stable release.
 * Increased timeout and made the buttons larger to make getting back to the config screen easier
 ## v2.4.0
 * Added the ability to set a check-ins startup mode
+## v3.0.0
+* Changed the printing system. It now supports more options!

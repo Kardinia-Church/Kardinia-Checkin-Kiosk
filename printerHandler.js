@@ -226,7 +226,6 @@ module.exports = {
     createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken, printLabelId) {
         var self = this;
 
-        console.log(printLabelId);
         return new Promise(async (resolve, reject) => {
             fluroHandler.fluro.api.post("/printer/register", {
                 title: checkinId,
