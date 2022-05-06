@@ -278,9 +278,6 @@ module.exports = {
 
         self.successCallback("Printed successfully to " + self.printerUSBName + " (" + self.printerHeight + "x" + self.printerWidth + ")", 3000);
         self.eventHandler.info("Printed successfully to " + self.printerUSBName + " (" + self.printerHeight + "x" + self.printerWidth + ")", EVENT_HANDLER_NAME);
-
-        //Delete our pdf
-        await fs.promises.unlink(filename);
     },
 
     /**
@@ -295,9 +292,6 @@ module.exports = {
             border: "10mm"
         };
 
-        console.log(document.data);
-        console.log(document.data.contact);
-
         pdf.create({
             path: `${this.outputPath}temp_${document.id}.pdf`,
             html: document.html,
@@ -307,8 +301,18 @@ module.exports = {
             height: (!self.printerRotate ? self.printerHeight : self.printerWidth) + "mm",
             width: (!self.printerRotate ? self.printerWidth : self.printerHeight) + "mm",
         }).then(async function (result) {
-            self.eventHandler.info("Finished the PDF generation, printing now!", EVENT_HANDLER_NAME);
-            //await self.printPDF(result.filename);
+            //If the file is less than 5kb assume it's an empty pdf and don't print it
+            if (fs.statSync(result.filename).size > 2000) {
+                self.eventHandler.info("Finished the PDF generation, printing now!", EVENT_HANDLER_NAME);
+                await self.printPDF(result.filename);
+                //Delete our pdf
+                await fs.promises.unlink(result.filename);
+            }
+            else {
+                self.eventHandler.info("Finished the PDF generation but it was empty...", EVENT_HANDLER_NAME);
+                //Delete our pdf
+                await fs.promises.unlink(result.filename);
+            }
         }).catch(error => {
             console.log(error);
         });
