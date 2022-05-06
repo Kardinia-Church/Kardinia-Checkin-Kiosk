@@ -101,6 +101,26 @@ module.exports = {
     },
 
     /**
+     * Get the contact from Fluro
+     * @param {*} contactId 
+     */
+    getContact: function (contactId) {
+        var self = this;
+        return new Promise((resolve, reject) => {
+            self.fluro.api.get("/content/contact/" + contactId, {
+                cache: false,
+                params: {
+                    appendContactDetail: "all"
+                }
+            }).then(result => {
+                resolve(result.data);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    },
+
+    /**
      * Get a family from Fluro
      * @param {string} id 
      * @returns A promise
@@ -118,20 +138,15 @@ module.exports = {
         });
     },
 
-
     /**
-     * Get a printer template from Fluro
-     * @param {string} type 
+     * Get a event from Fluro
+     * @param {string} id 
      * @returns A promise
      */
-    getPrinterTemplate: function (type) {
-        id = this.kioskConfiguration.templates[type];
-
+    getEvent: function (id) {
         var self = this;
         return new Promise((resolve, reject) => {
-            if (!id) { reject(); }
-
-            self.fluro.api.get("/content/code/" + id, {
+            self.fluro.api.get("/content/event/" + id, {
                 cache: false
             }).then(result => {
                 resolve(result.data);
@@ -139,6 +154,27 @@ module.exports = {
                 reject(error);
             });
         });
+    },
+
+    /**
+    * Get the rosters from Fluro for an event
+    * @param {object} the event 
+    * @returns A promise
+    */
+    getRosters: async function (event) {
+        var self = this;
+
+        var waitingFor = [];
+        for (var i in event.rosters) {
+            waitingFor.push(new Promise((resolve, reject) => {
+                self.fluro.api.get("/content/roster/" + event.rosters[i]._id, {
+                    cache: false
+                }).then(result => {
+                    resolve(result.data);
+                }).catch(error => { reject(error); })
+            }));
+        }
+        return await Promise.all(waitingFor);
     },
 
     //Get the kiosk configuration file from fluro
@@ -158,24 +194,18 @@ module.exports = {
 
     /**
      * Generate a document to print
-     * @param {string} type
-     * @param {object} contact
+     * @param {object} data
      * @returns A promise which if successful returns the document
      */
-    generateDocument: function (type, contact) {
+    generateDocument: function (data) {
         var self = this;
         return new Promise((resolve, reject) => {
-            self.getPrinterTemplate(type).then(result => {
-                var date = new Date(contact.created);
-                contact.date = `${date.toDateString()} ${date.toLocaleString().split(",")[1]}`;
-
-                console.log(contact);
-
+            self.fluro.api.get("/content/code/" + this.kioskConfiguration.printTemplateId, {
+                cache: false
+            }).then(result => {
                 var document = {
-                    html: result.body,
-                    data: {
-                        contact: contact,
-                    },
+                    html: result.data.body,
+                    data: data,
                     type: "",
                 };
 
@@ -205,15 +235,46 @@ module.exports = {
                 //Check our pool after a bit
                 if (self.checkTimeout) { clearTimeout(self.checkTimeout); }
                 self.checkTimeout = setTimeout(async function () {
+                    //Get more information about the event
+                    try { var event = await self.getEvent(self.currentPool[Object.keys(self.currentPool)[0]].event._id); }
+                    catch (error) {
+                        console.log(error);
+                        self.eventHandler.error(`Failed to get the contact with id ${self.currentPool[Object.keys(self.currentPool)[0]]._id} from Fluro`, EVENT_HANDLER_NAME);
+                        return;
+                    }
+
+                    //Get the rosters for the event
+                    try { var rosters = await self.getRosters(event); }
+                    catch (error) {
+                        console.log(error);
+                        self.eventHandler.error(`Failed to get the rosters for the event from Fluro`, EVENT_HANDLER_NAME);
+                        return;
+                    }
+
+                    //Get information about the family
                     var family;
-                    if (Object.keys(self.currentPool).length > 1) {
-                        family = await self.getFamily(self.currentPool[Object.keys(self.currentPool)[0]].family);
+                    try { family = await self.getFamily(self.currentPool[Object.keys(self.currentPool)[0]].family); }
+                    catch (error) {
+                        console.log(error);
+                        self.eventHandler.error(`Failed to get the family with id ${self.currentPool[Object.keys(self.currentPool)[0]].family} from Fluro`, EVENT_HANDLER_NAME);
+                        return;
                     }
 
                     //Find the family role
-                    var stickers = [];
+                    var contacts = [];
                     for (var i in self.currentPool) {
                         var current = self.currentPool[i];
+
+                        //Grab more information about the contact
+                        try { var contact = await self.getContact(current.contact._id); }
+                        catch (error) {
+                            console.log(error);
+                            self.eventHandler.error(`Failed to get the contact with id ${current.contact._id} from Fluro`, EVENT_HANDLER_NAME);
+                            return;
+                        }
+
+                        current.event = event;
+                        current.contact = contact;
 
                         //Figure out if this is a parent or child
                         if (family) {
@@ -227,24 +288,32 @@ module.exports = {
                             current.familyRole = "contact";
                         }
 
-                        //Generate the stickers for each contact first
-                        switch (current.familyRole) {
-                            case "contact": {
-                                stickers.push(await self.generateDocument("general", current));
-                                break;
+                        //Find the role for the contact if they're rostered onto this event
+                        current.roles = [];
+                        for (var i in rosters) {
+                            for (var j in rosters[i].slots) {
+                                for (var k in rosters[i].slots[j].assignments) {
+                                    if (rosters[i].slots[j].assignments[k].contact == current.contact._id) {
+                                        current.roles.push(rosters[i].slots[j].title);
+                                    }
+                                }
                             }
                         }
 
-                        //Generate the pickup sticker if required
-
-
-
-
+                        contacts.push(current);
                     }
 
-                    resolve(stickers);
+                    //Generate the document
+                    var date = new Date(self.currentPool[Object.keys(self.currentPool)[0]].created);
+                    resolve(await self.generateDocument({
+                        event: event,
+                        family: family,
+                        contacts: contacts,
+                        date: `${date.toDateString()} ${date.toLocaleString().split(",")[1]}`,
+                        checkin: self.currentPool[Object.keys(self.currentPool)[0]]
+                    }));
                     self.currentPool = {};
-                }, 500);
+                }, 1000);
             }).catch(error => {
                 console.log(error);
                 this.eventHandler.error(`Failed to get the checkin with id ${checkinId} from Fluro`, EVENT_HANDLER_NAME);

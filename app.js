@@ -836,10 +836,7 @@ ipcMain.handle("gotPrintFromFirebase", async function (event, incoming) {
     if (printerHandler.enabled) {
         eventHandler.info("Got print notification for " + incoming.data.title, EVENT_HANDLER_NAME);
         fluroHandler.generatePrint(incoming.data.html).then(stickers => {
-            for (var i in stickers) {
-                stickers[i].id = i;
-                printerHandler.printSticker(stickers[i]);
-            }
+            printerHandler.printSticker(stickers);
         }).catch(error => { });
     }
     return true;

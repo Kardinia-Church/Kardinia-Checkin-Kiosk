@@ -289,13 +289,26 @@ module.exports = {
      */
     printSticker: async function (document) {
         var self = this;
-        document.path = `${this.outputPath}temp_${document.id}.pdf`;
-        pdf.create(document, {
+        document.data.printer = {
+            height: (!self.printerRotate ? self.printerHeight : self.printerWidth) + "mm",
+            width: (!self.printerRotate ? self.printerWidth : self.printerHeight) + "mm",
+            border: "10mm"
+        };
+
+        console.log(document.data);
+        console.log(document.data.contact);
+
+        pdf.create({
+            path: `${this.outputPath}temp_${document.id}.pdf`,
+            html: document.html,
+            data: JSON.stringify(document.data) //We pass a stringified version to allow for better processing on the HTML side using JS
+        }, {
             border: "5mm",
             height: (!self.printerRotate ? self.printerHeight : self.printerWidth) + "mm",
             width: (!self.printerRotate ? self.printerWidth : self.printerHeight) + "mm",
         }).then(async function (result) {
-            await self.printPDF(result.filename);
+            self.eventHandler.info("Finished the PDF generation, printing now!", EVENT_HANDLER_NAME);
+            //await self.printPDF(result.filename);
         }).catch(error => {
             console.log(error);
         });

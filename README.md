@@ -33,6 +33,17 @@ The kiosk will display a configuration page initially.
 * The advanced button is intended for extra troubleshooting steps, it allows for updating settings, restarting the kiosk, and reading logs.
 * To get back into the kiosk configuration simply ```tap the top-left corner than the bottom-right corner```.
 
+# Setup
+1. Go to Fluro > Developers > Code
+2. Create or duplicate a `print template`. Entering the following ```<%= get('_id') %>```
+3. Create or duplicate a `pickup print template`. Entering the following ```DONOTPRINT```
+4. Create a basic code with HTML. This is your label that will be printed. Set this to the example html seen in `label formatting`.
+5. Create another basic code as Javascript with the example configuration seen below in `fluro configuration`
+6. In the application configuration file this created code in 4 is the `kioskConfigurationId`
+7. Get the ID for the created code in 3 and put this into the configuration as `printTemplate`
+8. Enter the fluro firebase id. (Ask for it, or find it yourself in the Fluro print application, I'm not listing it here as i'm not sure if this is private..)
+9. Set the kiosk id and kiosk campus.
+
 # Installation
 1. Install the relevant drivers below and configure the printers accordingly
 2. Ensure nodejs is installed on the system
@@ -99,7 +110,9 @@ Example
 
     "kioskStartupModes": {
         "KioskId": "mode2"
-    }
+    },
+
+    "printTemplate": "<id>"
 }
 ```
 
@@ -107,72 +120,254 @@ Example
 * ```posterURL``` Is the URL the application will direct to on the top "poster" monitor
 * ```mainURL``` Is the URL the application will direct to on the bottom monitor
 * ```enablePrinter``` Will enable or disable the printer (true/false)
+* ```campusModes``` Is what is shown in the select mode window, allows for multi campus setups
+* ```kioskStartupModes``` Forces a kiosk to a mode when it first turns on
+* ```printTemplate``` The id of the code containing the HTML to generate the print output
 
-# Supported Printer Functions
-When a check-in occurs it sends the application a print event. This contains a HTML string that is sent which is processed here and printed. There is extra functionality within this application which allows for customized data points to be entered into a label.
+# Label Formatting
+The labels are printed out as a HTML document, this allows for high flexibility and use of Javascript.
 
-## How to use
-To use this functionality on Fluro one can edit the HTML and add empty elements with id equal to what is wanted listed below. To edit the HTML goto developers/code in Fluro and create/edit a check-in printer template where the HTML can be edited.
-
-### Example
+## Example
 ```
-<d class="nametag">
-    <% //These are required for the Kardinia checkin application to do api calls %>
-    <d id="checkinId"><%= get('_id') %></d>
-    <d id="contactId"><%= get('contact._id') %></d>
+<html>
+<style>
+    * {
+        font-family: Arial, sans-serif;
+        padding: 0;
+        margin: 0;
+    }
 
-    <d><%= get('age') %></d>
-    <d id="grade"></d>
-</d>
+    p {
+        font-size: 4mm;
+    }
+
+    .checkinDate {
+        font-size: 3mm;
+        position: fixed;
+        left: 0;
+    }
+
+    .batchID {
+        position: fixed;
+        font-size: 6mm;
+        line-height: 6mm;
+        padding: 2mm;
+        border-radius: 3mm;
+        font-weight: 800;
+        background: #000 !important;
+        color: #fff !important;
+        right: 1mm;
+    }
+
+    .shapes {
+        position: fixed;
+        font-size: 6mm;
+        line-height: 6mm;
+        padding: 2mm;
+        border-radius: 3mm;
+        font-weight: 800;
+        background: #000 !important;
+        color: #fff !important;
+        right: 1mm;
+    }
+
+    .label {
+        overflow: hidden;
+        background-color: pink;
+    }
+</style>
+<script>
+    //Generate a generic label
+    function generateGenericLabel(label, checkin, contact, event, family, date, printer) {
+        //Format the roles
+        var role = "";
+        for (var i in contact.roles) {
+            role += contact.roles[i] + ", ";
+        }
+
+        var div = document.createElement("div");
+        div.classList.add("label");
+        div.style.height = "calc(" + printer.width + " - " + printer.border + ")";
+        div.style.height = "calc(" + printer.height + " - " + printer.border + ")";
+
+        div.innerHTML += "<h2>" + contact.title + "</h2>";
+        div.innerHTML += "<h1>" + contact.roles + "</h1>";
+        div.innerHTML += "<br>";
+        div.innerHTML += "<h3>" + event.title + "</h3>";
+
+        var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
+        div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
+        return div.outerHTML;
+    }
+
+    //Generate a child label
+    function generateChildLabel(label, checkin, contact, event, family, date, printer) {
+        //Format the roles
+        var role = "";
+        for (var i in contact.roles) {
+            role += contact.roles[i] + ", ";
+        }
+
+        //Find the parents
+        var parents = [];
+        if (family) {
+            for (var i in family.items) {
+                if (family.items[i].householdRole == "parent") {
+                    parents.push(family.items[i].title);
+                }
+            }
+        }
+
+        //Generate the shapes
+        var shapes = "";
+        if (contact.contact.details && contact.contact.details.medicalandHealth && contact.contact.details.medicalandHealth.data) {
+            var temp = contact.contact.details.medicalandHealth.data;
+            if (temp.allergies == true) {
+                shapes += "<p>&boxtimes;</p>"
+            }
+            if (temp.doyouhaveanydietaryneeds == true) {
+                shapes += "<p>&phone;</p>"
+            }
+            if (temp.custodyArrangements == true) {
+                shapes += "<p>&bigstar;</p>"
+            }
+            if (temp.healthConcerns == true) {
+                shapes += "<p>&FilledSmallSquare;</p>"
+            }
+            if (temp.medication == true) {
+                shapes += "<p>&sung;</p>"
+            }
+            if (temp.mediaRelease && temp.mediaRelease.toLowerCase() != "yes" && temp.mediaRelease != true) {
+                shapes += "<p>&CirclePlus;</p>"
+            }
+        }
+
+
+        var div = document.createElement("div");
+        div.classList.add("label");
+        div.style.width = "calc(" + printer.width + " - " + printer.border + ")";
+        div.style.height = "calc(" + printer.height + " - " + printer.border + ")";
+
+        div.innerHTML += "<h1>" + contact.title + "</h1>";
+        div.innerHTML += "<p><strong>Age: </strong>" + contact.age + " <strong>Grade: </strong>" + (contact.academicGrade ? "Year " + contact.academicGrade.split("year")[1] : "-") + "</p>";
+        if (parents.length > 0) {
+            div.innerHTML += "<p><strong>Parent(s): </strong></p>";
+            div.innerHTML += "<p>" + parents + "</p>";
+        }
+        if (checkin.checkedInBy._id != contact._id) {
+            div.innerHTML += "<p><strong>Checked in by: </strong></p>";
+            div.innerHTML += "<p>" + checkin.checkedInBy.title + " (" + checkin.phoneNumber + ")</p>";
+        }
+        if (contact.roles.length > 0) {
+            div.innerHTML += "<p><strong>Roles: </strong>" + contact.roles + "</p>";
+        }
+        div.innerHTML += "<p><strong>Event: </strong>" + event.title + "</p>";
+
+        var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
+        div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
+        if (shapes != "") {
+            div.innerHTML += "<div class='shapes' style='top: calc(" + offset + " - " + printer.height + " + 10mm)'>" + shapes + "</div>";
+        }
+        return div.outerHTML;
+    }
+
+    //Generate a pickup label
+    function generatePickupLabel(label, checkin, contacts, event, family, date, printer) {
+        //Find the parents
+        var parents = [];
+        if (family) {
+            for (var i in family.items) {
+                if (family.items[i].householdRole == "parent") {
+                    parents.push(family.items[i].title);
+                }
+            }
+        }
+
+        //Get the children in this pickup
+        var children = [];
+        for (var i in contacts) {
+            if (contacts[i].familyRole == "child") {
+                children.push(contacts[i].title);
+            }
+        }
+        if (children.length <= 0) {
+            return "";
+        }
+
+
+        var div = document.createElement("div");
+        div.classList.add("label");
+        div.style.width = "calc(" + printer.width + " - " + printer.border + ")";
+        div.style.height = "calc(" + printer.height + " - " + printer.border + ")";
+
+
+        div.innerHTML += "<h1>Parent Pickup</h1>";
+        div.innerHTML += "<h2>" + event.title + "</h2>";
+
+        div.innerHTML += "<p><strong>Child(s): </strong></p>";
+        div.innerHTML += "<p>" + children + "</p>";
+
+        if (parents.length > 0) {
+            div.innerHTML += "<p><strong>Parent(s): </strong></p>";
+            div.innerHTML += "<p>" + parents + "</p>";
+        }
+        div.innerHTML += "<p><strong>Checked in by: </strong></p>";
+        div.innerHTML += "<p>" + checkin.checkedInBy.title + " (" + checkin.phoneNumber + ")</p>";
+
+        var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
+        div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
+        return div.outerHTML;
+    }
+
+
+    window.onload = function() {
+        var labelDiv = document.getElementById("labels");
+
+        //This gets the data and converts it to a JSON object. It's adding it to the DOM first because of a limitation in the renderer used..
+        labelDiv.innerHTML = "{{this}}";
+        var data = JSON.parse(labelDiv.innerHTML);
+        labelDiv.innerHTML = "";
+
+        var label = 1;
+        for (var i in data.contacts) {
+            if (data.contacts[i].familyRole == "child") {
+                labelDiv.innerHTML += generateChildLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.date, data.printer);
+            } else {
+                labelDiv.innerHTML += generateGenericLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.date, data.printer);
+            }
+        }
+        if (data.contacts.length > 0) {
+            labelDiv.innerHTML += generatePickupLabel(label, data.checkin, data.contacts, data.event, data.family, data.date, data.printer);
+        }
+    }
+</script>
+<div id="labels"></div>
+
+</html>
+```
+On the kiosk side we convert the data into a stringified JSON object and then convert it back when we render. This allows for better access of the object.
+
+
+# How printing works
+For ease of use the application will go to Fluro to get the print templates, of which there are 3.
+1. The print template itself
+2. The parent pickup print template. (This is ignored)
+3. The HTML code this application prints.
+
+The print templates (1,2) are the Fluro print templates. These MUST contain the following code
+Child
+```
+<%= get('_id') %>
+```
+Pickup
+```
+DONOTPRINT
 ```
 
-## Extra functionality
-### grade
-Populate the school grade of the contact
-```<d id="grade"></d>```
-### email
-Populate the first most email of the contact
-```<d id="email"></d>```
-### localPhone
-Populate the first most local phone number of the contact
-```<d id="localPhone"></d>```
-### familyPhone
-Populate the first most phone number for the family
-```<d id="familyPhone"></d>```
-### familyEmail
-Populate the first most email for the family
-```<d id="familyEmail"></d>```
-### parentFullName
-Populate the first most parent's full name
-```<d id="parentFullName"></d>```
-### parentFirstName
-Populate the first most parent's first name
-```<d id="parentFirstName"></d>```
-### parentLastName
-Populate the first most parent's last name
-```<d id="parentLastName"></d>```
-### parentEmail
-Populate the first most parent's first most email
-```<d id="parentEmail"></d>```
-### parentLocalPhone
-Populate the first most parent's first most local phone number
-```<d id="parentLocalPhone"></d>```
-
-### doNotPrintLabel
-Will disable the printing of the label entirely
-```<p id="doNotPrintLabel"></p>```
-### ifFuze
-Will hide the element if the event name doesn't contain "fuze"
-```<div id="ifFuze"><div>```
-### ifPlaygroups
-Will hide the element if the event name doesn't contain "playgroups"
-```<div id="ifPlaygroups"><div>```
-### ifService
-Will hide the element if the event name doesn't contain "service"
-```<div id="ifService"><div>```
-### labelTitle
-Special case for if the event is a service. This will populate the label title based on what service team they are apart of
-```<h1 id="labelTitle"></h1>```
+The above print templates are only used for the application to get the checkin id event. The application will then get 3 from Fluro and generate the label(s) based on this.
 
 # Development
 ## Dependencies
