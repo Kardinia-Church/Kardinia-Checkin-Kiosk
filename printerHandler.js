@@ -1,4 +1,3 @@
-// const HTML5ToPDF = require("html5-to-pdf");
 const pdfToPrinter = require("pdf-to-printer");
 const fs = require("fs");
 const EVENT_HANDLER_NAME = "Printer";
@@ -7,7 +6,6 @@ const supportedPrinters = {
     "microsoftPDF": {
         friendlyName: "PDF",
         USBName: "Microsoft Print to PDF",
-        // printOptions: ['-print-settings paper="A4"'],
         "width": 100,
         "height": 100,
         "rotate": false
@@ -15,7 +13,6 @@ const supportedPrinters = {
     "brotherQL580N": {
         friendlyName: "Brother QL-580N",
         USBName: "Brother QL-580N",
-        // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
         "rotate": true
@@ -23,7 +20,6 @@ const supportedPrinters = {
     "brotherQL820NWB": {
         friendlyName: "Brother QL820NWB",
         USBName: "Brother QL-820NWB",
-        // printOptions: ['-print-settings "fit"'],
         "width": 62,
         "height": 100,
         "rotate": true
@@ -31,7 +27,6 @@ const supportedPrinters = {
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
         USBName: "DYMO LabelWriter 450 Turbo",
-        // printOptions: ['-print-settings "fit"'],
         "width": 54,
         "height": 101,
         "rotate": true
@@ -189,7 +184,7 @@ module.exports = {
         this.eventHandler.info("Printer set to: " + this.printerUSBName, EVENT_HANDLER_NAME);
     },
 
-    //Get information about this printer from Fluro
+    //Get information about this printer from Fluro //TODO disable the width, height etc + force label type to our specific new label type
     getPrinterInformationFromFluro: function () {
         var self = this;
         return new Promise((resolve, reject) => {
@@ -208,14 +203,7 @@ module.exports = {
         });
     },
 
-    //TO BE DEPRECIATED
-    //Get the list of printer templates from fluro
-    getPrinterTemplatesFromFluro: async function () {
-        try { return await this.fluroHandler.fluro.api.get("/printer/templates", { cache: false }); }
-        catch (e) { return undefined; }
-    },
-
-    //NEED TO UPDATE
+    //TODO: NEED TO UPDATE
     //Start a test print
     testPrint: function () {
         return this.fluroHandler.fluro.api.get("/printer/" + this.printerId + "/test", { cache: false });
@@ -223,7 +211,7 @@ module.exports = {
 
     //NEED TO BE UPDATED
     //Create a new printer for our checkin on Fluro
-    createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken, printLabelId) {
+    createNewPrinterFluro(fluroHandler, checkinId, platform, applicationVersion, applicationName, firebaseToken, childLabelId, pickupLabelId) {
         var self = this;
 
         return new Promise(async (resolve, reject) => {
@@ -239,15 +227,15 @@ module.exports = {
                     rotated: false,
                     width: self.printerType.width,
                     height: self.printerType.height,
-                    templateChild: printLabelId,
-                    templateParent: printLabelId //This technically doesn't work but eh
+                    templateChild: childLabelId,
+                    templateParent: pickupLabelId
                 }
             }).then(resolve).catch(reject);
         });
     },
 
     //Update the fluro settings for our printer
-    updateFluroInformation: function (stationName, rotate, width, height, childTemplateId, parentTemplateId, firebaseToken, printerId = undefined) {
+    updateFluroInformation: function (stationName, rotate, width, height, childLabelId, pickupLabelId, firebaseToken, printerId = undefined) {
         return this.fluroHandler.fluro.api.put("/printer/" + (printerId || this.printerId), {
             title: stationName,
             deviceID: firebaseToken,
@@ -255,8 +243,8 @@ module.exports = {
                 rotated: rotate,
                 width: width,
                 height: height,
-                templateChild: childTemplateId,
-                templateParent: parentTemplateId
+                templateChild: childLabelId,
+                templateParent: pickupLabelId
             }
         });
     },

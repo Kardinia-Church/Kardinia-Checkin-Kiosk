@@ -40,7 +40,7 @@ The kiosk will display a configuration page initially.
 4. Create a basic code with HTML. This is your label that will be printed. Set this to the example html seen in `label formatting`.
 5. Create another basic code as Javascript with the example configuration seen below in `fluro configuration`
 6. In the application configuration file this created code in 4 is the `kioskConfigurationId`
-7. Get the ID for the created code in 3 and put this into the configuration as `printTemplate`
+7. Get the IDs for the created code in 3 and put this into the configuration as `childLabelId` and `pickupLabelId` respectively
 8. Enter the fluro firebase id. (Ask for it, or find it yourself in the Fluro print application, I'm not listing it here as i'm not sure if this is private..)
 9. Set the kiosk id and kiosk campus.
 
@@ -112,7 +112,8 @@ Example
         "KioskId": "mode2"
     },
 
-    "printTemplate": "<id>"
+    "childLabelId": "<id>",
+    "pickupLabelId": "<id>"
 }
 ```
 
@@ -122,7 +123,8 @@ Example
 * ```enablePrinter``` Will enable or disable the printer (true/false)
 * ```campusModes``` Is what is shown in the select mode window, allows for multi campus setups
 * ```kioskStartupModes``` Forces a kiosk to a mode when it first turns on
-* ```printTemplate``` The id of the code containing the HTML to generate the print output
+* ```childLabelId``` The id of the code containing the HTML to generate the print output for the child label
+* ```pickupLabelId``` The id of the code containing the HTML to generate the print output for the pickup label
 
 # Label Formatting
 The labels are printed out as a HTML document, this allows for high flexibility and use of Javascript.

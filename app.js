@@ -27,7 +27,7 @@ var states = {
 };
 var logs = [];
 var windows = {};
-var developmentMode = false;
+var developmentMode = true;
 var localStorageListener;
 
 //When the app is ready open our windows!
@@ -170,7 +170,7 @@ async function check() {
                         try {
 
                             printerHandler.printerType = printerHandler.getPrinterTypes()[Object.keys(printerHandler.getPrinterTypes())[0]];
-                            var result = await printerHandler.createNewPrinterFluro(fluroHandler, "KIOSK - " + configs["kioskId"], os.platform(), APPLICATION_VERSION, APPLICATION_NAME, "TOKEN NOT SET YET", fluroHandler.kioskConfiguration.printTemplateId);
+                            var result = await printerHandler.createNewPrinterFluro(fluroHandler, "KIOSK - " + configs["kioskId"], os.platform(), APPLICATION_VERSION, APPLICATION_NAME, "TOKEN NOT SET YET", fluroHandler.kioskConfiguration.pickupLabelId, fluroHandler.kioskConfiguration.pickupLabelId);
 
                             //Save the id to our settings and restart
                             config.set("fluroPrinterID", result.data._id);
@@ -748,8 +748,7 @@ ipcMain.handle("savePrinterSettings", async function (event, object) {
 
     //Fluro settings
     if (object.fluroPrinterId && object.setFluro == true) {
-
-        printerHandler.updateFluroInformation(object.fluroStationName, object.fluroRotate, object.fluroWidth, object.fluroHeight, object.fluroChildTemplate, object.fluroParentTemplate, object.fluroPrinterId).then(result => {
+        printerHandler.updateFluroInformation(object.fluroStationName, object.fluroRotate, object.fluroWidth, object.fluroHeight, fluroHandler.kioskConfiguration.childLabelId, fluroHandler.kioskConfiguration.pickupLabelId, object.fluroPrinterId).then(result => {
             eventHandler.info("The Fluro print station was updated", EVENT_HANDLER_NAME);
             restartApplication();
         }).catch(error => {
@@ -773,14 +772,12 @@ ipcMain.handle("savePrinterSettings", async function (event, object) {
 ipcMain.handle("getPrinterSettings", async function (event) {
     eventHandler.info("Getting the printer settings", EVENT_HANDLER_NAME);
     var fluroPrinter = undefined; try { fluroPrinter = await printerHandler.getPrinterInformationFromFluro(); } catch (e) { }
-    var fluroTemplates = await printerHandler.getPrinterTemplatesFromFluro();
     var printerUSBs = await printerHandler.getPrinterUSBs();
     return {
         printerId: configs["fluroPrinterID"],
         printerType: configs["printerType"],
         customPrinter: configs["customPrinter"],
         fluroPrinter: fluroPrinter ? fluroPrinter.data : undefined,
-        fluroTemplates: fluroTemplates ? fluroTemplates.data : undefined,
         printerTypes: printerHandler.getPrinterTypes(),
         printerUSBs: printerUSBs
     }

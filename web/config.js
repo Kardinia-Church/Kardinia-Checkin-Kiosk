@@ -256,24 +256,6 @@ async function openPrinterSettings(show) {
 
         //Populate fluro printer settings
         if (printerSettings.fluroPrinter) {
-            var fluroPrinterNameTagTemplate = document.getElementById("fluroPrinterNameTagTemplate");
-            var fluroPrinterParentTemplate = document.getElementById("fluroPrinterParentTemplate");
-            fluroPrinterNameTagTemplate.innerHTML = "";
-            fluroPrinterParentTemplate.innerHTML = "";
-            for (var i = 0; i < printerSettings.fluroTemplates.length; i++) {
-                switch (printerSettings.fluroTemplates[i].data.type) {
-                    case "child": {
-                        fluroPrinterNameTagTemplate.innerHTML += "<option value='" + printerSettings.fluroTemplates[i]._id + "'>" + printerSettings.fluroTemplates[i].title + "</option>";
-                        break;
-                    }
-                    case "parent": {
-                        fluroPrinterParentTemplate.innerHTML += "<option value='" + printerSettings.fluroTemplates[i]._id + "'>" + printerSettings.fluroTemplates[i].title + "</option>";
-                        break;
-                    }
-                }
-            }
-            fluroPrinterNameTagTemplate.value = printerSettings.fluroPrinter.data.templateChild;
-            fluroPrinterParentTemplate.value = printerSettings.fluroPrinter.data.templateParent;
             document.getElementById("fluroWidth").value = printerSettings.fluroPrinter.data.width;
             document.getElementById("fluroHeight").value = printerSettings.fluroPrinter.data.height;
             document.getElementById("fluroRotate").checked = printerSettings.fluroPrinter.data.rotated;
@@ -307,8 +289,6 @@ async function updatePrinterSettings() {
         printerType: document.getElementById("printerType").value,
         printerUSB: document.getElementById("printerUSB").value,
         fluroPrinterId: document.getElementById("fluroPrinterId").value,
-        fluroParentTemplate: document.getElementById("fluroPrinterParentTemplate").value,
-        fluroChildTemplate: document.getElementById("fluroPrinterNameTagTemplate").value,
         fluroWidth: parseInt(document.getElementById("fluroWidth").value),
         fluroHeight: parseInt(document.getElementById("fluroHeight").value),
         fluroRotate: document.getElementById("fluroRotate").checked,
