@@ -240,7 +240,7 @@ async function openPrinterSettings(show) {
         }
         printerTypes.value = printerSettings.printerType;
         if (printerSettings.printerType == "custom") {
-            hideShowElements(undefined, ["printerUSB, printerUSBLabel"]);
+            hideShowElements(undefined, ["printerUSB, printerUSBLabel", "customPrinterSettings"]);
         }
 
         //Populate printer usbs
@@ -268,10 +268,10 @@ async function openPrinterSettings(show) {
         //Show the printer usb selector if set to custom
         document.getElementById("printerType").onchange = function (event) {
             if (event.target.value == "custom") {
-                hideShowElements(undefined, ["printerUSB", "printerUSBLabel"]);
+                hideShowElements(undefined, ["printerUSB", "printerUSBLabel", "customPrinterSettings"]);
             }
             else {
-                hideShowElements(["printerUSB", "printerUSBLabel"], undefined);
+                hideShowElements(["printerUSB", "printerUSBLabel", "customPrinterSettings"], undefined);
                 document.getElementById("printerUSB").value = "unset";
             }
         }
