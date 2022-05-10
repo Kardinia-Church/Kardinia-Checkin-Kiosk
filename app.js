@@ -785,11 +785,7 @@ ipcMain.handle("getPrinterSettings", async function (event) {
 
 //Start a test print
 ipcMain.handle("issueTestPrint", async function (event) {
-    eventHandler.info("Attempting to print a test label using Fluro", EVENT_HANDLER_NAME);
-    var result = undefined; try { await printerHandler.testPrint(); eventHandler.info("Successfully sent a test print", EVENT_HANDLER_NAME); } catch (e) {
-        console.log(e);
-        eventHandler.error("There was a problem sending the test print", EVENT_HANDLER_NAME);
-    }
+    printerHandler.testPrint();
     return true;
 });
 

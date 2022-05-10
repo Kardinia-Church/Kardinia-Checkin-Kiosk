@@ -203,10 +203,48 @@ module.exports = {
         });
     },
 
-    //TODO: NEED TO UPDATE
     //Start a test print
-    testPrint: function () {
-        return this.fluroHandler.fluro.api.get("/printer/" + this.printerId + "/test", { cache: false });
+    testPrint: async function () {
+        var errors = [];
+        try {
+            var document = await this.fluroHandler.generateDocument({});
+            if(document.html == "" || !document.html) {
+                errors.push("Issue getting template");
+            }
+        }
+        catch(error) {
+            errors.push("Issue getting template");
+        }
+
+        //Print a label
+        this.printSticker({
+            html: `
+            <html>
+            <style>
+            html, body, #label, h1, p {
+                padding: 0;
+                margin: 0;
+            }
+            #label {
+                width: calc(${(!this.printerRotate ? this.printerWidth : this.printerHeight)}mm - 13mm);
+                height: calc(${(!this.printerRotate ? this.printerHeight : this.printerWidth)}mm - 13mm);
+                overflow: hidden;
+                border: 2px solid black;
+                background-color: pink;
+            }
+            </style>
+            <div id="label">
+            ${errors.length > 0 ? "<h1>There are errors</h1>" : "<h1>Printing successful</h1>"}
+            <h1>&#128513;</h1>
+            ${errors.length > 0 ? "<p>" + errors + "</p>" : ""}
+            <p><strong>Dim: </strong>${this.printerWidth}mm x ${this.printerHeight}mm, Rotated: ${this.printerRotate}</p>
+            <p><strong>ID: </strong>${this.printerId} <strong>Type: </strong>${this.printerType.friendlyName}<strong>USB Dev: </strong>${this.printerUSBName}</p>
+            </div>
+            </html>
+            `,
+            data: {},
+            type: "",
+        });
     },
 
     //NEED TO BE UPDATED
