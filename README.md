@@ -112,6 +112,7 @@ Example
         "KioskId": "mode2"
     },
 
+    "printTemplateId": "<id>",
     "childLabelId": "<id>",
     "pickupLabelId": "<id>"
 }
@@ -123,12 +124,14 @@ Example
 * ```enablePrinter``` Will enable or disable the printer (true/false)
 * ```campusModes``` Is what is shown in the select mode window, allows for multi campus setups
 * ```kioskStartupModes``` Forces a kiosk to a mode when it first turns on
-* ```childLabelId``` The id of the code containing the HTML to generate the print output for the child label
-* ```pickupLabelId``` The id of the code containing the HTML to generate the print output for the pickup label
+* ```printTemplateId``` The id of the code containing the HTML to generate the print
+* ```childLabelId``` The id of the code for the label that Fluro will action when a print occurs (This will be picked up by the application)
+* ```pickupLabelId``` The id of the code for the pickup label that Fluro will action when a print occurs (This will be picked up by the application)
 
 # Label Formatting
 The labels are printed out as a HTML document, this allows for high flexibility and use of Javascript.
 
+The below example will print out parent, children, and pickup stickers depending on their household roles.
 ## Example
 ```
 <html>
@@ -175,7 +178,6 @@ The labels are printed out as a HTML document, this allows for high flexibility 
 
     .label {
         overflow: hidden;
-        background-color: pink;
     }
 </style>
 <script>
@@ -199,7 +201,7 @@ The labels are printed out as a HTML document, this allows for high flexibility 
 
         var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
         div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
-        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchId + "</p>";
         return div.outerHTML;
     }
 
@@ -221,31 +223,6 @@ The labels are printed out as a HTML document, this allows for high flexibility 
             }
         }
 
-        //Generate the shapes
-        var shapes = "";
-        if (contact.contact.details && contact.contact.details.medicalandHealth && contact.contact.details.medicalandHealth.data) {
-            var temp = contact.contact.details.medicalandHealth.data;
-            if (temp.allergies == true) {
-                shapes += "<p>&boxtimes;</p>"
-            }
-            if (temp.doyouhaveanydietaryneeds == true) {
-                shapes += "<p>&phone;</p>"
-            }
-            if (temp.custodyArrangements == true) {
-                shapes += "<p>&bigstar;</p>"
-            }
-            if (temp.healthConcerns == true) {
-                shapes += "<p>&FilledSmallSquare;</p>"
-            }
-            if (temp.medication == true) {
-                shapes += "<p>&sung;</p>"
-            }
-            if (temp.mediaRelease && temp.mediaRelease.toLowerCase() != "yes" && temp.mediaRelease != true) {
-                shapes += "<p>&CirclePlus;</p>"
-            }
-        }
-
-
         var div = document.createElement("div");
         div.classList.add("label");
         div.style.width = "calc(" + printer.width + " - " + printer.border + ")";
@@ -257,9 +234,9 @@ The labels are printed out as a HTML document, this allows for high flexibility 
             div.innerHTML += "<p><strong>Parent(s): </strong></p>";
             div.innerHTML += "<p>" + parents + "</p>";
         }
-        if (checkin.checkedInBy._id != contact._id) {
+        if (checkin.checkedInById != contact._id) {
             div.innerHTML += "<p><strong>Checked in by: </strong></p>";
-            div.innerHTML += "<p>" + checkin.checkedInBy.title + " (" + checkin.phoneNumber + ")</p>";
+            div.innerHTML += "<p>" + checkin.checkedInByTitle + " (" + checkin.phoneNumber + ")</p>";
         }
         if (contact.roles.length > 0) {
             div.innerHTML += "<p><strong>Roles: </strong>" + contact.roles + "</p>";
@@ -268,10 +245,7 @@ The labels are printed out as a HTML document, this allows for high flexibility 
 
         var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
         div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
-        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
-        if (shapes != "") {
-            div.innerHTML += "<div class='shapes' style='top: calc(" + offset + " - " + printer.height + " + 10mm)'>" + shapes + "</div>";
-        }
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchId + "</p>";
         return div.outerHTML;
     }
 
@@ -316,16 +290,16 @@ The labels are printed out as a HTML document, this allows for high flexibility 
             div.innerHTML += "<p>" + parents + "</p>";
         }
         div.innerHTML += "<p><strong>Checked in by: </strong></p>";
-        div.innerHTML += "<p>" + checkin.checkedInBy.title + " (" + checkin.phoneNumber + ")</p>";
+        div.innerHTML += "<p>" + checkin.checkedInByTitle + " (" + checkin.phoneNumber + ")</p>";
 
         var offset = ((parseInt(printer.height.split("mm")[0]) - parseInt(printer.border.split("mm")[0])) * label) + "mm";
         div.innerHTML += "<p class='checkinDate' style='top: calc(" + offset + " - 5mm)'>Checkin Date: " + date + "</p>";
-        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchID + "</p>";
+        div.innerHTML += "<p class='batchID' style='top: calc(" + offset + " - 10mm)'>" + checkin.batchId + "</p>";
         return div.outerHTML;
     }
 
 
-    window.onload = function() {
+    window.onload = function () {
         var labelDiv = document.getElementById("labels");
 
         //This gets the data and converts it to a JSON object. It's adding it to the DOM first because of a limitation in the renderer used..
@@ -333,17 +307,17 @@ The labels are printed out as a HTML document, this allows for high flexibility 
         var data = JSON.parse(labelDiv.innerHTML);
         labelDiv.innerHTML = "";
 
+        //Print out the labels!
         var label = 1;
         for (var i in data.contacts) {
             if (data.contacts[i].familyRole == "child") {
-                labelDiv.innerHTML += generateChildLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.date, data.printer);
+                labelDiv.innerHTML += generateChildLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.checkin.date, data.printer);
             } else {
-                labelDiv.innerHTML += generateGenericLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.date, data.printer);
+                labelDiv.innerHTML += generateGenericLabel(label++, data.checkin, data.contacts[i], data.event, data.family, data.checkin.date, data.printer);
             }
         }
-        if (data.contacts.length > 0) {
-            labelDiv.innerHTML += generatePickupLabel(label, data.checkin, data.contacts, data.event, data.family, data.date, data.printer);
-        }
+        
+        labelDiv.innerHTML += generatePickupLabel(label, data.checkin, data.contacts, data.event, data.family, data.checkin.date, data.printer);
     }
 </script>
 <div id="labels"></div>
@@ -360,9 +334,19 @@ For ease of use the application will go to Fluro to get the print templates, of 
 3. The HTML code this application prints.
 
 The print templates (1,2) are the Fluro print templates. These MUST contain the following code
-Child
+Child. (Extra fields can be added here if required as well and can be accessed in the checkin object)
 ```
-<%= get('_id') %>
+{
+"checkinId":"<%=get('_id')%>",
+"contactId":"<%=get('contact._id')%>",
+"familyId":"<%=get('family')%>",
+"checkedInById":"<%=get('checkedInBy._id')%>",
+"eventId":"<%=get('event._id')%>",
+"batchId":"<%=get('batchID')%>",
+"phoneNumber":"<%=get('phoneNumber')%>",
+"checkedInByTitle":"<%=get('checkedInBy.firstName')%> <%=get('checkedInBy.lastName')%>",
+"date":"<%=renderDate('created', 'h:mma ddd D MMM')%>"
+}
 ```
 Pickup
 ```

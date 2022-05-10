@@ -90,9 +90,7 @@ module.exports = {
     getCheckin: function (checkinId) {
         var self = this;
         return new Promise((resolve, reject) => {
-            self.fluro.api.get("/content/checkin/" + checkinId, {
-                cache: false
-            }).then(result => {
+            self.fluro.api.get("/content/checkin/" + checkinId).then(result => {
                 resolve(result.data);
             }).catch(error => {
                 reject(error);
@@ -108,7 +106,6 @@ module.exports = {
         var self = this;
         return new Promise((resolve, reject) => {
             self.fluro.api.get("/content/contact/" + contactId, {
-                cache: false,
                 params: {
                     appendContactDetail: "all"
                 }
@@ -128,9 +125,7 @@ module.exports = {
     getFamily: function (id) {
         var self = this;
         return new Promise((resolve, reject) => {
-            self.fluro.api.get("/content/family/" + id, {
-                cache: false
-            }).then(result => {
+            self.fluro.api.get("/content/family/" + id).then(result => {
                 resolve(result.data);
             }).catch(error => {
                 reject(error);
@@ -146,9 +141,7 @@ module.exports = {
     getEvent: function (id) {
         var self = this;
         return new Promise((resolve, reject) => {
-            self.fluro.api.get("/content/event/" + id, {
-                cache: false
-            }).then(result => {
+            self.fluro.api.get("/content/event/" + id).then(result => {
                 resolve(result.data);
             }).catch(error => {
                 reject(error);
@@ -220,105 +213,118 @@ module.exports = {
 
     /**
      * Generate the print
-     * @param {string} checkinId The checkin id 
+     * @param {string} incoming The incoming message from the fluro html event
      */
     currentPool: {},
     checkTimeout: undefined,
-    generatePrint: async function (checkinId) {
+    generatePrint: async function (incoming) {
         return new Promise((resolve, reject) => {
             var self = this;
-            if (checkinId == "" || checkinId == "DONOTPRINT") { reject(); return; }
 
-            this.getCheckin(checkinId).then(result => {
-                self.currentPool[result._id] = result;
+            if (incoming == "DONOTPRINT") { reject(); return; }
 
-                //Check our pool after a bit
-                if (self.checkTimeout) { clearTimeout(self.checkTimeout); }
-                self.checkTimeout = setTimeout(async function () {
-                    //Get more information about the event
-                    try { var event = await self.getEvent(self.currentPool[Object.keys(self.currentPool)[0]].event._id); }
-                    catch (error) {
-                        console.log(error);
-                        self.eventHandler.error(`Failed to get the contact with id ${self.currentPool[Object.keys(self.currentPool)[0]]._id} from Fluro`, EVENT_HANDLER_NAME);
-                        return;
-                    }
-
-                    //Get the rosters for the event
-                    try { var rosters = await self.getRosters(event); }
-                    catch (error) {
-                        console.log(error);
-                        self.eventHandler.error(`Failed to get the rosters for the event from Fluro`, EVENT_HANDLER_NAME);
-                        return;
-                    }
-
-                    //Get information about the family
-                    var family;
-                    try { family = await self.getFamily(self.currentPool[Object.keys(self.currentPool)[0]].family); }
-                    catch (error) {
-                        console.log(error);
-                        self.eventHandler.error(`Failed to get the family with id ${self.currentPool[Object.keys(self.currentPool)[0]].family} from Fluro`, EVENT_HANDLER_NAME);
-                        return;
-                    }
-
-                    //Find the family role
-                    var contacts = [];
-                    for (var i in self.currentPool) {
-                        var current = self.currentPool[i];
-
-                        //Grab more information about the contact
-                        try { var contact = await self.getContact(current.contact._id); }
-                        catch (error) {
-                            console.log(error);
-                            self.eventHandler.error(`Failed to get the contact with id ${current.contact._id} from Fluro`, EVENT_HANDLER_NAME);
-                            return;
-                        }
-
-                        current.event = event;
-                        current.contact = contact;
-
-                        //Figure out if this is a parent or child
-                        if (family) {
-                            for (var j in family.items) {
-                                if (family.items[j]._id == current.contact._id) {
-                                    current.familyRole = family.items[j].householdRole;
-                                }
-                            }
-                        }
-                        else {
-                            current.familyRole = "contact";
-                        }
-
-                        //Find the role for the contact if they're rostered onto this event
-                        current.roles = [];
-                        for (var i in rosters) {
-                            for (var j in rosters[i].slots) {
-                                for (var k in rosters[i].slots[j].assignments) {
-                                    if (rosters[i].slots[j].assignments[k].contact == current.contact._id) {
-                                        current.roles.push(rosters[i].slots[j].title);
-                                    }
-                                }
-                            }
-                        }
-
-                        contacts.push(current);
-                    }
-
-                    //Generate the document
-                    var date = new Date(self.currentPool[Object.keys(self.currentPool)[0]].created);
-                    resolve(await self.generateDocument({
-                        event: event,
-                        family: family,
-                        contacts: contacts,
-                        date: `${date.toDateString()} ${date.toLocaleString().split(",")[1]}`,
-                        checkin: self.currentPool[Object.keys(self.currentPool)[0]]
-                    }));
-                    self.currentPool = {};
-                }, 1000);
-            }).catch(error => {
-                console.log(error);
-                this.eventHandler.error(`Failed to get the checkin with id ${checkinId} from Fluro`, EVENT_HANDLER_NAME);
+            var checkin = JSON.parse(incoming);
+            if (!checkin.checkinId || !checkin.contactId || !checkin.familyId || !checkin.checkedInById || !checkin.eventId || !checkin.batchId) {
+                self.eventHandler.error(`There was an error with the incoming print from Fluro`, EVENT_HANDLER_NAME);
                 reject();
-            });
+                return;
+            }
+
+            //Add the current to the pool and wait for any extra prints to come in, we need to print them together
+            self.currentPool[checkin.checkinId] = checkin;
+
+            //Check our pool after a bit
+            if (self.checkTimeout) { clearTimeout(self.checkTimeout); }
+            self.checkTimeout = setTimeout(async function () {
+                //Get more information about the checkin
+                var event;
+                var rosters;
+                var family;
+                var contacts = [];
+
+                var waitingFor = [];
+                waitingFor.push(self.getEvent(self.currentPool[Object.keys(self.currentPool)[0]].eventId));
+                waitingFor.push(self.getFamily(self.currentPool[Object.keys(self.currentPool)[0]].familyId));
+                for (var i in self.currentPool) {
+                    waitingFor.push(self.getContact(self.currentPool[i].contactId));
+                }
+
+                self.eventHandler.info("Getting the extra information about the checkin...", EVENT_HANDLER_NAME);
+
+                try {
+                    var results = await Promise.all(waitingFor);
+                    event = results[0];
+                    family = results[1];
+                    for (var i = 2; i < results.length; i++) {
+                        contacts.push(results[i]);
+                    }
+                }
+                catch (error) {
+                    console.log(error);
+                    self.eventHandler.error(`Failed to print the checkin because something happened while getting the extra information`, EVENT_HANDLER_NAME);
+                    reject();
+                    return;
+                }
+
+                //Validate
+                if (!event || !family || contacts.length != Object.keys(self.currentPool).length) {
+                    self.eventHandler.error(`A validation error occurred when getting the extra information about the checkin`, EVENT_HANDLER_NAME);
+                    reject();
+                    return;
+                }
+
+
+                //Get the rosters for the event
+                try { var rosters = await self.getRosters(event); }
+                catch (error) {
+                    console.log(error);
+                    self.eventHandler.error(`Failed to get the rosters for the event from Fluro`, EVENT_HANDLER_NAME);
+                    reject();
+                    return;
+                }
+
+                //Find the family role
+                for (var i in contacts) {
+                    //Figure out if this is a parent or child
+                    if (family) {
+                        for (var j in family.items) {
+                            if (family.items[j]._id == contacts[i]._id) {
+                                contacts[i].familyRole = family.items[j].householdRole;
+                            }
+                        }
+                    }
+                    else {
+                        contacts[i].familyRole = "contact";
+                    }
+
+                    //Find the role for the contact if they're rostered onto this event
+                    contacts[i].roles = [];
+                    for (var i in rosters) {
+                        for (var j in rosters[i].slots) {
+                            for (var k in rosters[i].slots[j].assignments) {
+                                if (rosters[i].slots[j].assignments[k].contact == contacts[i]._id) {
+                                    contacts[i].roles.push(rosters[i].slots[j].title);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                self.eventHandler.info("Generating the print", EVENT_HANDLER_NAME);
+
+                //Generate the document
+                resolve(await self.generateDocument({
+                    event: event,
+                    family: family,
+                    contacts: contacts,
+                    checkin: self.currentPool[Object.keys(self.currentPool)[0]]
+                }));
+                self.currentPool = {};
+            }, 500);
+        }).catch(error => {
+            console.log(error);
+            this.eventHandler.error(`Failed to get the checkin with id ${checkinId} from Fluro`, EVENT_HANDLER_NAME);
+            reject();
         });
     }
 }
