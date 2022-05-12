@@ -240,7 +240,7 @@ async function openPrinterSettings(show) {
         }
         printerTypes.value = printerSettings.printerType;
         if (printerSettings.printerType == "custom") {
-            hideShowElements(undefined, ["printerUSB, printerUSBLabel", "customPrinterSettings"]);
+            hideShowElements(undefined, ["printerUSB", "printerUSBLabel", "customPrinterSettings"]);
         }
 
         //Populate printer usbs

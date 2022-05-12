@@ -729,15 +729,17 @@ ipcMain.handle("savePrinterSettings", async function (event, object) {
     eventHandler.info("Updating the printer settings", EVENT_HANDLER_NAME);
 
     //Config file
-    if (object.printerType) {
+    if (object.printerType && object.printerType != "custom") {
         //If they changed the printer type copy over the width and height to our printer type
         if (configs["printerType"] != object.printerType) {
             object.fluroWidth = printerHandler.getPrinterTypes()[object.printerType].width;
             object.fluroHeight = printerHandler.getPrinterTypes()[object.printerType].height;
             object.fluroRotate = printerHandler.getPrinterTypes()[object.printerType].rotate;
         }
-        config.set("printerType", object.printerType);
+        
     }
+    
+    config.set("printerType", object.printerType);
     if (object.fluroPrinterId) { config.set("fluroPrinterID", object.fluroPrinterId); }
     if (object.printerUSB) {
         config.set("customPrinter", {
