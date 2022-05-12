@@ -216,6 +216,12 @@ module.exports = {
             errors.push("Issue getting template");
         }
 
+        if(!this.printerType) {
+            this.printerType = {
+                friendlyName: "Custom"
+            }
+        }
+
         //Print a label
         this.printSticker({
             html: `
