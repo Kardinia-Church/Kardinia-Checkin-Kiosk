@@ -30,3 +30,4 @@ First stable release.
 * Added the ability to set a check-ins startup mode
 ## v3.0.0
 * Changed the printing system. It now supports more options!
+* Changed the label shapes
