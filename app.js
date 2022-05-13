@@ -738,7 +738,7 @@ ipcMain.handle("savePrinterSettings", async function (event, object) {
         }
         
     }
-    
+
     config.set("printerType", object.printerType);
     if (object.fluroPrinterId) { config.set("fluroPrinterID", object.fluroPrinterId); }
     if (object.printerUSB) {
@@ -856,15 +856,15 @@ ipcMain.handle("printShapes", function () {
         <style>
         h3 {
             padding-left: 40px;
-            font-size: 0.8em
+            font-size: 0.6em
         }
         </style>
-        <h3>Has Health Concerns: &FilledSmallSquare;</h3>
-        <h3>Has Custody Arrangements: &bigstar;</h3>
-        <h3>Has Medication: &sung;</h3>
-        <h3>No Media Release: &CirclePlus;</h3>
-        <h3>Has Allergies: &boxtimes;</h3>
-        <h3>Has Dietary Requirements: &phone;</h3>
+        <h3>Has Health Concerns: &#9729;</h3>
+        <h3>Has Custody Arrangements: &#9733</h3>
+        <h3>Has Medication: &#9836</h3>
+        <h3>No Media Release: &#9899</h3>
+        <h3>Has Allergies: &#9924</h3>
+        <h3>Has Dietary Requirements: &#9951</h3>
         </html>
         `,
         data: {},
