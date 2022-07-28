@@ -27,6 +27,14 @@ const supportedPrinters = {
         "height": 100,
         "rotate": false
     },
+    "brotherQL820NWB": {
+        friendlyName: "Brother QL-700",
+        USBName: "Brother QL-700",
+        // printOptions: ['-print-settings "fit"'],
+        "width": 62,
+        "height": 100,
+        "rotate": false
+    },
     "DYMOLabelWriter450Turbo": {
         friendlyName: "DYMO Label Writer 450 Turbo",
         USBName: "DYMO LabelWriter 450 Turbo",
