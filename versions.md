@@ -30,3 +30,5 @@ First stable release.
 * Added the ability to set a check-ins startup mode
 ## v2.4.1
 * Added support for the Brother QL-700
+## v2.4.2
+* Fixed a typo which was stopping a printer from being shown
