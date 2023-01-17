@@ -32,3 +32,5 @@ First stable release.
 * Added support for the Brother QL-700
 ## v2.4.2
 * Fixed a typo which was stopping a printer from being shown
+## v2.4.3
+* Added extra functionality to provide age from contact's dob as #computedAge

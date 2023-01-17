@@ -173,6 +173,9 @@ Will hide the element if the event name doesn't contain "service"
 ### labelTitle
 Special case for if the event is a service. This will populate the label title based on what service team they are apart of
 ```<h1 id="labelTitle"></h1>```
+### computedAge
+Populate the computed age of the contact from "dob"
+```<d id="computedAge"></d>```
 
 # Development
 ## Dependencies

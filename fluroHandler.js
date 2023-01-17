@@ -266,6 +266,25 @@ module.exports = {
              * Contact Information
              */
 
+            // Populate the computedAge tag
+            if (html.querySelector("#computedAge") != null) {
+                pushSelector("contact");
+                callbacks.push(function (result) {
+                    try {
+                        const today = new Date();
+                        const dob = new Date(result.contact.dob);
+                        const monthDiff = today.getMonth() - dob.getMonth();
+                        let computedAge = today.getFullYear() - dob.getFullYear();
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate()))
+                            computedAge--;
+                        html.querySelector("#computedAge").innerHTML = computedAge;
+                    }
+                    catch (e) {
+                        if (!isNaN(result.contact.age) && result.contact.age >= 0)
+                            html.querySelector("#computedAge").innerHTML = result.contact.age;
+                    }
+                });
+            }
             //Populate the name tag notes
             if (html.querySelector("#nameTagNotes") != null) {
                 pushSelector("contact");
