@@ -1,5 +1,6 @@
 const electron = require("electron");
 const app = electron.app;
+const screen = electron.screen;
 const BrowserWindow = electron.BrowserWindow;
 const ipcMain = electron.ipcMain;
 const { setup: setupPushReceiver } = require('electron-push-receiver');
@@ -84,7 +85,10 @@ app.on("ready", async () => {
 
             generatePopupWindow("info", "Getting things ready!", "Please wait", 1);
             generateMainWindow();
-            generatePosterWindow();
+            // Only generate poster window if there are more than 1 screens
+            try {
+                if(screen.getAllDisplays().length > 1) generatePosterWindow();   
+            } catch (e) { }
 
             //If there is a default mode set in the configuration on Fluro then load it otherwise open the settings window
             if (fluroHandler.kioskConfiguration.kioskStartupModes) {

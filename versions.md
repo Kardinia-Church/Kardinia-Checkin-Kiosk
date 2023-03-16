@@ -34,3 +34,5 @@ First stable release.
 * Fixed a typo which was stopping a printer from being shown
 ## v2.4.3
 * Added extra functionality to provide age from contact's dob as #computedAge
+## v2.4.4
+* Added a feature where the poster kiosk window is disable if screen count is 1
