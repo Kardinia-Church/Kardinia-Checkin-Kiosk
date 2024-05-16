@@ -38,5 +38,5 @@ First stable release.
 * Added a feature where the poster kiosk window is disable if screen count is 1
 ## v2.4.5
 * Added new printer config for Brother QL-800
-## v2.4.5.1
+## v2.4.6
 * Fixed usbName typo for Brother QL-800
