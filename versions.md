@@ -36,3 +36,5 @@ First stable release.
 * Added extra functionality to provide age from contact's dob as #computedAge
 ## v2.4.4
 * Added a feature where the poster kiosk window is disable if screen count is 1
+## v2.4.5
+* Added new printer config for Brother-QL800

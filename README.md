@@ -58,6 +58,10 @@ The kiosk will display a configuration page initially.
 * Download and install the driver from [here](https://support.brother.com/g/b/downloadtop.aspx?c=us_ot&lang=en&prod=lpql820nwbeus)
 * Go into printer preferences and set the label size to paper size = 62mm, 62mm (width), 100mm (length), 3mm (Feed)
 
+### QL-800 - Config type = ```brotherQL800```
+* Download and install the driver from [here](https://support.brother.com/g/b/downloadtop.aspx?c=us_ot&lang=en&prod=lpql800eus)
+* Go into printer preferences and set the label size to paper size = 62mm, 62mm (width), 100mm (length), 3mm (Feed)
+
 # Application Configuration
 The application configuration file can be found in ```<USER DIRECTORY>/kardinia-kiosk/config.conf```. The file contains the following information:
 * ```printerType``` The printer type to use, see supported printer types above. (Can be set in the application)

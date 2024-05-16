@@ -19,6 +19,14 @@ const supportedPrinters = {
         "height": 100,
         "rotate": false
     },
+    "brotherQL800": {
+        friendlyName: "Brother QL800",
+        USBName: "Brother QL-QL800",
+        // printOptions: ['-print-settings "fit"'],
+        "width": 62,
+        "height": 100,
+        "rotate": false
+    },
     "brotherQL820NWB": {
         friendlyName: "Brother QL820NWB",
         USBName: "Brother QL-820NWB",
