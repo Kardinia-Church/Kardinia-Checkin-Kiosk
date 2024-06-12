@@ -40,3 +40,5 @@ First stable release.
 * Added new printer config for Brother QL-800
 ## v2.4.6
 * Fixed usbName typo for Brother QL-800
+## v2.4.7
+* Fixed device name typo for Brother QL-800

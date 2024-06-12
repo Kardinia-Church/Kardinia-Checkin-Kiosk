@@ -20,7 +20,7 @@ const supportedPrinters = {
         "rotate": false
     },
     "brotherQL800": {
-        friendlyName: "Brother QL800",
+        friendlyName: "Brother QL-800",
         USBName: "Brother QL-800",
         // printOptions: ['-print-settings "fit"'],
         "width": 62,
